@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>RM Stock Management</title>
+<meta name="theme-color" content="#073b67">
+<link rel="manifest" href="./manifest.json">
+<meta name="description" content="Personal offline RM Stock Management app">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RM Stock">
+<style>
+:root{--nav:#073b67;--nav2:#0d5b88;--ink:#17324d;--muted:#6b7b8c;--bg:#f4f7fb;--card:#fff;--line:#dbe4ed;--good:#198754;--warn:#c27a00;--bad:#c62828;--shadow:0 8px 28px rgba(23,50,77,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.top{background:linear-gradient(135deg,var(--nav),var(--nav2));color:#fff;padding:14px 18px;position:sticky;top:0;z-index:20}.toprow{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:800;font-size:19px}.sub{font-size:12px;opacity:.8;margin-top:2px}.role{border:1px solid #ffffff55;background:#ffffff18;color:#fff;border-radius:12px;padding:10px 13px;cursor:pointer}
+.nav{display:flex;gap:8px;overflow:auto;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:74px;z-index:19}.nav button{white-space:nowrap;border:1px solid var(--line);background:#f7f9fc;border-radius:24px;padding:11px 16px;color:var(--ink);font-weight:700;cursor:pointer}.nav button.active{background:#173b66;color:#fff}
+.wrap{max-width:1500px;margin:auto;padding:18px}.page{display:none}.page.active{display:block}h1{font-size:28px;margin:6px 0}.desc{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.metric{padding:18px;border-radius:16px;background:#fff;border:1px solid var(--line)}.metric b{display:block;font-size:25px;margin-top:7px}.label{color:var(--muted);font-size:13px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}input,select{font:inherit;border:1px solid #cbd7e3;border-radius:9px;padding:10px 11px;background:#fff;color:var(--ink)}button.primary{background:#173b66;color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}button.secondary{background:#eef3f8;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}button.danger{background:#fff0f0;color:#a61b1b;border:1px solid #f2baba;border-radius:10px;padding:10px 14px;font-weight:700}
+.notice{background:#eef7ff;border:1px solid #d0e8fb;border-radius:13px;padding:13px;margin:12px 0;color:#31566f}.entry-grid{display:grid;grid-template-columns:1fr 160px 100px;gap:10px;align-items:center}.entry-grid .head{font-weight:800;color:#617286;padding:8px 0;border-bottom:1px solid var(--line)}.product-name{font-weight:700}.code{font-size:12px;color:var(--muted)}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:13px;background:#fff}table{border-collapse:collapse;width:100%;min-width:780px}th,td{border-bottom:1px solid #e8eef4;padding:9px 10px;text-align:left;white-space:nowrap}th{background:#f3f7fb;position:sticky;top:0;z-index:1}td.num,th.num{text-align:right}.status-ok{color:var(--good);font-weight:800}.status-zero{color:var(--warn);font-weight:800}.status-short{color:var(--bad);font-weight:800}.pills{display:flex;gap:8px;flex-wrap:wrap}.pill{padding:8px 11px;border-radius:999px;background:#edf3f8;font-size:13px}.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}.small{font-size:13px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:50;padding:18px}.modal.show{display:flex}.modalbox{background:#fff;border-radius:18px;max-width:700px;width:100%;padding:20px;max-height:90vh;overflow:auto}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.split{grid-template-columns:1fr}.nav{top:54px}.wrap{padding:12px}}@media(max-width:620px){.grid{grid-template-columns:1fr 1fr}.entry-grid{grid-template-columns:1fr 110px 76px}.top{padding:4px 8px}.toprow{min-height:40px;gap:6px}.brand{font-size:13px;line-height:1;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sub{font-size:8px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.auth-user{font-size:10px;gap:4px}.auth-user>div{max-width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logout-btn{padding:5px 7px;font-size:10px}.nav{top:54px}.nav button{padding:8px 12px}h1{font-size:23px}.card{padding:13px}}
+@media print{.top,.nav,.toolbar,.no-print{display:none!important}.wrap{max-width:none;padding:0}.page{display:none!important}.page.printing{display:block!important}.card{box-shadow:none;border:0}body{background:#fff}}
+.dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.dash-head h1{margin:0}.dash-head p{margin:4px 0 0;color:var(--muted)}.dash-badge{padding:7px 10px;border-radius:999px;background:#e9f7ef;color:#177245;font-size:12px;font-weight:800;white-space:nowrap}.dash-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.dash-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}.dash-card .dash-label{color:var(--muted);font-size:13px}.dash-card .dash-num{font-size:25px;font-weight:800;margin-top:7px}.dash-live{font-size:12px;color:#198754;margin-top:6px}.dash-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}.dash-panel{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}.dash-panel-head{padding:12px 14px;font-weight:800}.dash-panel-head.blue{background:#eef5ff}.dash-panel-head.green{background:#edf9f1}.dash-panel-head.purple{background:#f4efff}.dash-body{padding:14px}.dash-body select{width:100%;margin-bottom:10px}.dash-table-wrap{overflow:auto}.dash-table-wrap table{min-width:420px}.dash-lower{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px}.dash-section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}.dash-section h2{font-size:17px;margin:0 0 12px}.dash-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #e8eef4}.dash-row:last-child{border-bottom:0}.dash-actions{display:flex;gap:9px;flex-wrap:wrap}.dash-actions button{flex:1;min-width:150px}@media(max-width:900px){.dash-cards{grid-template-columns:repeat(2,1fr)}.dash-grid3,.dash-lower{grid-template-columns:1fr}}@media(max-width:620px){.dash-cards{grid-template-columns:1fr 1fr}.dash-card{padding:13px}.dash-card .dash-num{font-size:21px}}
+
+
+.custom-col{display:grid;grid-template-columns:1.4fr 130px 2fr 90px;gap:8px;align-items:center;margin:8px 0}.custom-col input,.custom-col select{width:100%}.custom-sheet-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.formula-note{font-size:12px;color:var(--muted);line-height:1.5}.protected-list{display:flex;gap:7px;flex-wrap:wrap}.protected-list span{background:#fff4e8;border:1px solid #f1d2aa;border-radius:999px;padding:6px 9px;font-size:12px}.custom-row-actions{display:flex;gap:6px}.readonly-cell{background:#f7f9fc;color:#5f7081}.custom-empty{padding:18px;color:var(--muted);text-align:center}
+
+/* AUTH LAYER — added without changing existing app layout */
+.auth-gate{position:fixed;inset:0;background:linear-gradient(135deg,#073b67,#0d5b88);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999}
+.auth-card{width:min(420px,100%);background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:26px}
+.auth-card h2{margin:0 0 6px;color:#17324d}.auth-card p{color:#6b7b8c;font-size:13px}.auth-card input{width:100%;padding:12px;border:1px solid #dbe4ed;border-radius:10px;margin:7px 0;font-size:15px}.auth-card button{width:100%;margin-top:10px;padding:12px;border:0;border-radius:10px;cursor:pointer;font-weight:700}.auth-login{background:#073b67;color:#fff}.auth-msg{min-height:20px;margin-top:10px;font-size:13px;color:#c62828}.auth-user{display:flex;align-items:center;gap:8px}.auth-user small{opacity:.8}.logout-btn{border:1px solid #ffffff55;background:#ffffff18;color:#fff;border-radius:10px;padding:9px 12px;cursor:pointer}
+body.auth-locked>*:not(#authGate){visibility:hidden}
+</style></head><body class="auth-locked">
+<div class="auth-gate" id="authGate"><div class="auth-card"><h2>🏭 RM Stock Management</h2><p>Personal Login (এই ডিভাইসের জন্য)</p><form id="loginForm"><input id="loginEmail" type="email" autocomplete="username" placeholder="Email address" required><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password" required><input id="localRole" type="hidden" value="Admin"><button class="auth-login" type="submit">Login</button></form><div class="auth-msg" id="authMsg"></div><div class="small">Offline-only mode: data is saved on this device only. Personal use only. This login is stored on this device; it is not secure account authentication.</div></div></div>
+<div class="install-banner no-print" id="installBanner" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:9998;background:#fff;border:1px solid #dbe4ed;border-radius:16px;box-shadow:0 12px 35px rgba(23,50,77,.18);padding:12px 14px;align-items:center;justify-content:space-between;gap:10px">
+  <div><b>📱 RM Stock App</b><div class="small">একবার Home Screen-এ যোগ করলে পরে শুধু আইকনে চাপলেই খুলবে।</div></div>
+  <div style="display:flex;gap:7px"><button class="primary" id="installAppBtn" type="button">Install</button><button class="secondary" id="installCloseBtn" type="button">×</button></div>
+</div>
+<div class="top"><div class="toprow"><div><div class="brand">🏭 RM Stock Management System</div><div class="sub" id="companyTop"></div></div><div class="auth-user"><div id="authUserLabel">Not signed in</div><button class="logout-btn" id="logoutBtn">Logout</button></div></div></div>
+<div class="nav" id="nav"></div><div class="wrap">
+
+<section id="dashboard" class="page active">
+<div class="dash-head"><div><h1>Dashboard</h1><p>Today's RM Receive, Mixing-2 Use, Batch and Closing Stock</p></div><span class="dash-badge">LIVE DATA</span></div>
+<div class="dash-cards">
+<div class="dash-card"><div class="dash-label">Today RM Receive</div><div class="dash-num" id="mReceive">0 KG</div><div class="dash-live">● Live today</div></div>
+<div class="dash-card"><div class="dash-label">Today Mixing-2 Use</div><div class="dash-num" id="mUse">0 KG</div><div class="dash-live">● From Mixing-2</div></div>
+<div class="dash-card"><div class="dash-label">Today Batch</div><div class="dash-num" id="mBatch">0 Batch</div><div class="dash-live">● Input Batch</div></div>
+<div class="dash-card"><div class="dash-label">Closing RM Stock</div><div class="dash-num" id="mStock">0 KG</div><div class="dash-live">● Current balance</div></div>
+</div>
+<div class="dash-grid3">
+<div class="dash-panel"><div class="dash-panel-head blue">📦 Today Batch</div><div class="dash-body"><select id="bf" onchange="dashLists()"></select><div class="dash-table-wrap"><table><thead><tr><th>Product</th><th>Batch</th><th>Qty</th></tr></thead><tbody id="bl"></tbody></table></div></div></div>
+<div class="dash-panel"><div class="dash-panel-head green">🚚 Today Receive</div><div class="dash-body"><select id="rf" onchange="dashLists()"></select><div class="dash-table-wrap"><table><thead><tr><th>RM</th><th>Receive</th><th>UoM</th></tr></thead><tbody id="rl"></tbody></table></div></div></div>
+<div class="dash-panel"><div class="dash-panel-head purple">⚙️ Today Mixing-2</div><div class="dash-body"><select id="mf" onchange="dashLists()"></select><div class="dash-table-wrap"><table><thead><tr><th>RM</th><th>Use</th><th>UoM</th></tr></thead><tbody id="ml"></tbody></table></div></div></div>
+</div>
+<div class="dash-lower"><div class="dash-section"><h2>📊 Stock Overview</h2><div id="stock"></div></div><div class="dash-section"><h2>🕘 Recent Activity</h2><div id="recentActivity"></div></div><div class="dash-section"><h2>⚡ Quick Actions</h2><div class="dash-actions"><button class="primary" onclick="show('rm-daily')">+ RM Daily Entry</button><button class="primary" onclick="show('input-batch')">+ Input Batch</button><button class="primary" onclick="show('daily-report')">Daily Date Report</button></div></div></div>
+</section>
+
+<section id="input-batch" class="page"><h1>Input Batch</h1><p class="desc">Original workbook structure: Date + Day-1 … Day-31 + Total</p>
+<div class="notice">👤 Member Batch entry করতে পারবে। Product rename/add শুধু Admin approval-এর মাধ্যমে হবে। <b>তারিখ নির্বাচন করে প্রতিটি Product-এর Batch সংখ্যা লিখে Save Batch চাপুন।</b></div>
+<div class="card"><div class="toolbar"><label><b>Production Date</b><input type="date" id="batchDate"></label><label><b>Shift</b><select id="batchShift"><option value="1">Shift 1</option><option value="2">Shift 2</option><option value="3">Shift 3</option></select></label><button class="primary" id="saveBatch">💾 Save Shift Batch</button><button class="secondary" id="clearBatch">Clear</button></div><div class="notice" style="margin-top:10px">প্রতিটি শিফট আলাদা করে নির্বাচন করে Batch Qty লিখে Save করুন। Mixing-2-এ একই দিনের ৩ শিফটের মোট Batch স্বয়ংক্রিয়ভাবে যোগ হবে।</div></div>
+<div class="card"><div class="entry-grid"><div class="head">Product</div><div class="head">Batch Qty</div><div class="head">Code</div><div id="batchRows" style="display:contents"></div></div></div>
+<div class="card"><h2 style="margin-top:0">Saved Batch Entries — Edit</h2><p class="desc">নির্বাচিত তারিখের সংরক্ষিত এন্ট্রি দেখুন। ভুল এন্ট্রির পাশে Edit চাপলে তারিখ ও শিফট নির্বাচন হয়ে Qty সংশোধনের জন্য খুলবে।</p><div class="tablewrap"><table><thead><tr><th>Date</th><th>Shift</th><th>Product</th><th class="num">Batch Qty</th><th>Action</th></tr></thead><tbody id="batchRecordsBody"></tbody></table></div></div></section>
+
+<section id="rm-daily" class="page"><h1>RM Daily Entry</h1><p class="desc">RM DAILY ENTRY — STORE RECEIVE</p><div class="notice">প্রতিবার Receive হলে নতুন row দিন। একই দিনে একই Item একাধিকবার নিলে সব entry Monthly sheet-এ যোগ হবে।</div>
+<div class="card"><div class="toolbar"><input type="date" id="recvDate"><select id="recvItem"></select><input type="number" step="0.001" min="0" id="recvQty" placeholder="Receive (kg)"><input id="recvNote" placeholder="Entry Note / Reference"><button class="primary" id="saveReceive">+ Add Receive</button><button class="secondary" id="scanVoucherBtn" type="button">📷 Scan Voucher (Offline AI)</button></div></div>
+<div class="card no-print" id="voucherAgentCard" style="display:none">
+  <h3 style="margin-top:0">🤖 Offline Voucher AI Agent</h3>
+  <p class="desc">ক্যামেরা খুলে ভাউচার/চালান স্ক্যান করুন। English + বাংলা OCR মডেল লোকাল আছে। ডিটেক্ট হওয়া ডেটা এডমিন এডিট করে Daily Entry-তে যোগ করতে পারবেন। সম্পূর্ণ অফলাইন — ইন্টারনেট লাগে না। ডেটা অ্যাপের ভিতরের স্টোরেজে সংরক্ষিত হয়।</p>
+  <div id="voucherCameraArea">
+    <video id="voucherVideo" autoplay playsinline style="width:100%;max-width:420px;border-radius:12px;background:#000;display:none"></video>
+    <canvas id="voucherCanvas" style="display:none"></canvas>
+    <div class="toolbar" style="margin-top:10px">
+      <button class="primary" id="startCameraBtn" type="button">📷 Open Camera</button>
+      <button class="secondary" id="captureVoucherBtn" type="button" style="display:none">📸 Capture & Detect</button>
+      <button class="secondary" id="stopCameraBtn" type="button" style="display:none">Stop</button>
+    </div>
+    <div id="ocrStatus" class="notice" style="display:none;margin-top:10px"></div>
+  </div>
+  <div id="voucherResultArea" style="display:none;margin-top:14px">
+    <h4>Detected Data (Admin can edit)</h4>
+    <div class="toolbar" style="flex-wrap:wrap">
+      <label>Date <input type="date" id="vDetDate"></label>
+      <label>RM Item <select id="vDetItem"></select></label>
+      <label>Qty (kg) <input type="number" step="0.001" min="0" id="vDetQty" style="width:110px"></label>
+      <label>Note / Ref <input id="vDetNote" placeholder="Voucher / Challan No" style="min-width:160px"></label>
+    </div>
+    <div class="toolbar" style="margin-top:10px">
+      <button class="primary" id="approveVoucherBtn" type="button">✅ Admin Approve → Add to Daily Entry</button>
+      <button class="secondary" id="rescanVoucherBtn" type="button">🔄 Re-scan</button>
+    </div>
+    <div class="small" id="voucherRawOcr" style="margin-top:10px;max-height:120px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px;white-space:pre-wrap"></div>
+  </div>
+</div>
+<div class="card tablewrap"><table><thead><tr><th>Date</th><th>Code</th><th>Item Name</th><th>UoM</th><th class="num">Receive</th><th>Note</th><th>Status</th><th>Correction</th></tr></thead><tbody id="recvTable"></tbody></table></div></section>
+
+<section id="rm-monthly" class="page"><h1>RM Receive Monthly</h1><p class="desc">RM RECEIVE — MONTHLY DAY-WISE</p><div class="card"><div class="toolbar"><label>Month <input type="month" id="recvMonth"></label></div></div><div class="card tablewrap"><table><thead id="recvMonthlyHead"></thead><tbody id="recvMonthlyBody"></tbody></table></div></section>
+
+<section id="rm-opening" class="page"><h1>RM Opening Balance</h1><p class="desc">Master opening balance — Admin controlled</p><div class="notice">🔐 Personal APK: Admin-এর জন্য এখানে সরাসরি <b>Add + Edit</b> থাকবে। Code, Name, UoM এবং Opening Balance পরিবর্তন করলে সব হিসাবের master data sync হবে।</div><div class="card tablewrap"><table><thead><tr><th>Item Code</th><th>Item Name</th><th>UoM</th><th class="num">Opening Balance</th><th class="no-print">Admin</th></tr></thead><tbody id="rmOpeningBody"></tbody></table></div><div class="card no-print" id="openingAdminAdd" style="display:none"><h3>➕ Add New RM</h3><div class="toolbar"><input id="openingNewCode" type="number" placeholder="New RM Code"><input id="openingNewName" placeholder="New RM Name"><input id="openingNewUom" placeholder="UoM" value="kg"><input id="openingNewQty" type="number" step="0.001" placeholder="Opening Balance"><button class="primary" onclick="adminAddOpeningRM()">Add RM</button></div></div></section>
+
+<section id="mixing" class="page"><h1>Mixing-2</h1><p class="desc">Daily Consumption Report of Raw Materials of Production Floor — Section: Bakery</p><div class="card"><div class="toolbar"><label>Date <input type="date" id="mixDate"></label><button class="secondary" id="printMix">Print / PDF</button> <button class="secondary no-print" id="printMixPdf">📄 PDF</button><button class="primary no-print" id="editMixBatchBtn" style="display:none">✏️ Edit Batch</button></div></div><div class="card tablewrap"><table id="mixTable"></table></div></section>
+
+<section id="mix-monthly" class="page"><h1>RM Mixing2 Monthly</h1><p class="desc">MIXING-2 USE — MONTHLY DAY-WISE</p><div class="card"><div class="toolbar"><label>Month <input type="month" id="mixMonth"></label></div></div><div class="card tablewrap"><table id="mixMonthlyTable"></table></div></section>
+
+<section id="daily-report" class="page"><h1>Daily Date Report</h1><p class="desc">RAW MATERIAL DAILY REPORT — SELECTED DATE</p><div class="card"><div class="toolbar"><label>Report Date <input type="date" id="dailyDate"></label><button class="primary" id="printDaily">Print / PDF</button> <button class="secondary no-print" id="printDailyPdf">📄 PDF</button></div><div class="notice">Opening logic: <b>selected date-এর আগের দিনের Closing → selected date-এর Opening</b>. মাসের ১ তারিখে master opening balance starting point হিসেবে ব্যবহার হবে। তাই date বদলালে opening chain-ও বদলাবে।</div></div><div class="card tablewrap"><table id="dailyTable"></table></div></section>
+
+<section id="final-monthly" class="page"><h1>Final Monthly Usage</h1><p class="desc">RAW MATERIAL — FINAL MONTHLY USAGE REPORT</p><div class="card"><div class="toolbar"><label>Report Month <input type="month" id="finalMonth"></label><button class="primary" id="printFinal">Print / PDF</button> <button class="secondary no-print" id="printFinalPdf">📄 PDF</button><button class="secondary" id="finalizeMonthBtn">🔒 Finalize Month (Admin)</button></div></div><div class="card tablewrap"><table id="finalTable"></table></div></section>
+
+<section id="batch-log" class="page"><h1>RM Mixing2 Batch Log</h1><p class="desc">Historical batch/consumption audit view</p><div class="card tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Shift</th><th>Batch</th><th>Calculated</th><th>Saved At</th></tr></thead><tbody id="batchLogBody"></tbody></table></div></section>
+
+<section id="company" class="page"><h1>Company Profile</h1><div class="card"><h3>Current Company</h3><p class="desc">Company profile is separate from transaction history</p><div class="card"><div class="toolbar"><input id="companyInput" style="min-width:260px"><button class="primary" id="saveCompany">Save Company Name</button><button class="secondary" id="requestCompany">Request Change</button></div><p class="small">Member request → Admin approval; Admin can change directly. Historical transactions remain unchanged.</p></div></section>
+
+<section id="admin" class="page"><h1>Admin Panel</h1><p class="desc">Master data, approvals, correction audit and Admin-created Sheets</p>
+<div class="card" id="localBackupCard"><h3>📦 ফোনের মেমোরি Backup & Restore</h3><p class="small">সব RM Stock local data এই ফোনে JSON ফাইল হিসেবে Backup হবে। Google Drive/Sheets বা Internet লাগবে না।</p><div class="toolbar"><button class="primary" id="backupNowBtn" type="button">⬇ Backup Now</button><button class="secondary" id="restoreBackupBtn" type="button">↻ Restore Backup</button><button class="secondary" id="exportCsvBtn" type="button">Export CSV</button><input id="backupFileInput" type="file" accept=".json,application/json" style="display:none"></div><p class="small" id="lastBackupText">Last Backup: এখনো Backup নেওয়া হয়নি</p><div class="notice">সতর্কতা: Restore করলে এই ফোনের বর্তমান অ্যাপের ডেটা Backup ফাইলের ডেটা দিয়ে প্রতিস্থাপিত হবে। Restore করার আগে বর্তমান ডেটার Backup নিন।</div></div>
+<div class="card"><h3>Pending Approval Requests</h3><div id="approvals"></div></div>
+<div class="card"><h3>👥 User Management — Admin Only</h3><div class="notice">Multiple Admin ও Member account রাখা যাবে। Password কখনো এখানে দেখানো হবে না। Admin-এর edit limit নেই; Member-এর correction limit server-side 3.</div><div class="toolbar"><input id="newUserEmail" type="email" placeholder="Email"><input id="newUserName" placeholder="Name"><select id="newUserRole"><option value="Member">Member</option><option value="Admin">Admin</option></select><input id="newUserPassword" type="password" placeholder="Password (8+ characters)"><button class="primary" id="createUserBtn">+ Add User</button></div><div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Status</th><th>Action</th><th>Password</th></tr></thead><tbody id="usersBody"></tbody></table></div></div>
+<div class="card"><h3>Correction Audit</h3><div class="tablewrap"><table><thead><tr><th>Entry</th><th>User</th><th>Old</th><th>New</th><th>Time</th><th>Count</th></tr></thead><tbody id="auditBody"></tbody></table></div></div>
+<div class="card"><h3>🔐 Master Data Control — Admin Only</h3><div class="notice">RM Master-এ Edit/Add করলে একই RM code অনুযায়ী সব page-এ Name/UoM/RM list sync হবে। Mixing-2-এ Edit চাপলেও একই master record edit হবে। New RM recipe defaults to 0.</div><div class="toolbar"><select id="masterTab"><option value="rm">RM Master</option><option value="product">Product Master</option><option value="recipe">Mixing-2 Recipe</option></select><button class="secondary" id="renderMaster">Open</button></div><div id="masterEditor" style="margin-top:12px"></div></div><div class="card"><h3>➕ New Sheet Designer</h3><div class="notice"><b>Excel-style custom sheet:</b> Admin can create a new sheet, define columns, choose data types, add formulas, and decide whether Members can use it. Core workbook sheets are protected and cannot be replaced here.</div>
+<div class="toolbar"><input id="customSheetName" placeholder="New Sheet Name" style="flex:1;min-width:220px"><input id="customSheetDesc" placeholder="Description" style="flex:2;min-width:220px"><select id="customSheetAccess"><option value="member">Members + Admin</option><option value="admin">Admin only</option></select></div>
+<div style="margin-top:14px"><b>Columns</b><div id="customCols"></div><button class="secondary" id="addCustomCol">+ Add Column</button></div>
+<div class="formula-note" style="margin-top:12px">Formula examples: <code>=B2*C2</code> · <code>=SUM(D2:F2)</code> · <code>=IF(E2<0,"SHORTAGE","OK")</code>. Formula columns are calculated and read-only.</div>
+<div class="toolbar" style="margin-top:14px"><button class="primary" id="createCustomSheet">Create Sheet</button></div></div>
+<div class="card"><h3>Protected Core Sheets</h3><div class="protected-list" id="protectedList"></div></div>
+<div class="card"><h3>Admin-created Sheets</h3><div id="customSheetAdminList"></div></div>
+</section>
+
+<section id="custom-sheet" class="page"><h1 id="customTitle">Custom Sheet</h1><p class="desc" id="customDesc"></p><div class="card"><div class="custom-sheet-toolbar"><button class="primary" id="addCustomRow">+ Add Row</button><button class="secondary no-print" id="refreshCustomSheet">Refresh</button></div><div class="tablewrap" style="margin-top:12px"><table id="customTable"></table></div></div></section>
+
+<section id="other" class="page"><h1 id="otherTitle">Workbook Sheet</h1><p class="desc">Original workbook sheet</p><div class="card"><div class="notice">অপ্রয়োজনীয় পুরনো workbook sheets এই build-এর navigation-এ রাখা হয়নি। Core sheet relationship অপরিবর্তিত রাখা হয়েছে।</div><div id="otherInfo"></div></div></section>
+</div>
+
+<div class="modal" id="roleModal"><div class="modalbox"><h3>Demo Role</h3><p>Final backend-এ Google/email authentication থেকে role আসবে। এই build-এ testing-এর জন্য role switch করা যাচ্ছে।</p><div class="toolbar"><button class="primary" onclick="setRole('Member')">Member</button><button class="secondary" onclick="setRole('Admin')">Admin</button><button class="secondary" onclick="closeRole()">Close</button></div></div></div>
+
+<script>
+// Offline-only personal build. No remote endpoint is configured or used.
+window.RM_AUTH_CONFIG={url:''};
+window.authToken=localStorage.getItem('rm_auth_token')||'';
+try{window.authUser=JSON.parse(localStorage.getItem('rm_auth_user')||'null')}catch(e){window.authUser=null}
+const DATA={"company": "Ovijat Food & Beverage industries Ltd.", "products": [{"code": 301, "name": "milk cake"}, {"code": 302, "name": "Sweet toast"}, {"code": 304, "name": "Specail toast"}, {"code": 305, "name": "Sweet toast 20gm"}, {"code": 306, "name": "Dry cake(Normal)"}, {"code": 307, "name": "Butter Cookise"}, {"code": 308, "name": "Coconut Cookise"}, {"code": 309, "name": "Penut cookise"}, {"code": 310, "name": "Salty cookise"}], "rms": [{"code": 101, "name": "Flour - A Grade", "uom": "kg", "opening": 272.8}, {"code": 102, "name": "Flour- B Grade", "uom": "kg", "opening": 88.7}, {"code": 103, "name": "Sugar", "uom": "kg", "opening": 115.7}, {"code": 104, "name": "Cake Gel", "uom": "kg", "opening": 13.45}, {"code": 105, "name": "salt", "uom": "kg", "opening": 10.255}, {"code": 106, "name": "potassium sorbet", "uom": "kg", "opening": 2.2}, {"code": 107, "name": "Xanthangum", "uom": "kg", "opening": 0.7}, {"code": 108, "name": "Glycerin", "uom": "kg", "opening": 65.0}, {"code": 109, "name": "Sorbitol", "uom": "kg", "opening": 280.95}, {"code": 110, "name": "milk powder", "uom": "kg", "opening": 6.2}, {"code": 111, "name": "Baking powder", "uom": "kg", "opening": 0.0}, {"code": 112, "name": "Liquid Glucose", "uom": "kg", "opening": 320.891}, {"code": 113, "name": "Milk Flv", "uom": "kg", "opening": 15.204}, {"code": 114, "name": "vanilla Flv", "uom": "kg", "opening": 18.0}, {"code": 115, "name": "Milk Fresh Flv", "uom": "kg", "opening": 7.523}, {"code": 116, "name": "Palm oil", "uom": "kg", "opening": 235.5}, {"code": 117, "name": "Lecithin", "uom": "kg", "opening": 0.0}, {"code": 118, "name": "TBHA", "uom": "kg", "opening": 0.0}, {"code": 119, "name": "Egg (110pcs/batch)", "uom": "kg", "opening": 0.0}, {"code": 120, "name": "Dalda", "uom": "kg", "opening": 48.0}, {"code": 121, "name": "Yeast", "uom": "kg", "opening": 3.5}, {"code": 122, "name": "Black cumin", "uom": "kg", "opening": 0.2}, {"code": 123, "name": "Tratazine yellow colour", "uom": "kg", "opening": 0.0}, {"code": 124, "name": "Coconut Flv", "uom": "kg", "opening": 22.112}, {"code": 125, "name": "Penut Flv", "uom": "kg", "opening": 0.66}, {"code": 126, "name": "Coconut powder", "uom": "kg", "opening": 0.3}, {"code": 127, "name": "Rosted penut", "uom": "kg", "opening": 1.3}, {"code": 128, "name": "Ghee", "uom": "kg", "opening": 0.759}, {"code": 129, "name": "Chocolate Flv", "uom": "kg", "opening": 1.02}, {"code": 130, "name": "till", "uom": "kg", "opening": 0.4}, {"code": 131, "name": "mazarin", "uom": "kg", "opening": 16.2}, {"code": 132, "name": "golab", "uom": "kg", "opening": 203.0}, {"code": 133, "name": "fooo", "uom": "kg", "opening": 60.0}], "recipeProducts": ["Milk cake", "Sweet Toast", "Special Toast", "Sweet toast 20gm", "Dry cake (Normal)", "Butter cookise", "Coconut cookise", "Penut Cookise", "Salty Cookise", "", "", "", "", "", "", "", "", "", "", ""], "recipe": {"101": [0.0, 25.0, 25.0, 25.0, 15.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "102": [8.0, 25.0, 25.0, 25.0, 5.0, 40.0, 40.0, 40.0, 40.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "103": [4.0, 10.0, 10.0, 10.0, 12.0, 16.6, 16.6, 16.6, 16.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "104": [0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "105": [0.045, 0.5, 0.5, 0.0, 0.0, 0.2, 0.2, 0.2, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "106": [0.045, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "107": [0.003, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "108": [0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "109": [1.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "110": [0.15, 0.0, 0.0, 0.0, 0.4, 0.8, 0.8, 0.8, 0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "111": [0.15, 0.0, 0.0, 0.0, 0.3, 0.13, 0.13, 0.13, 0.13, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "112": [0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "113": [0.1, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "114": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "115": [0.1, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "116": [5.5, 2.5, 2.5, 2.5, 3.0, 7.0, 7.0, 7.0, 7.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "117": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "118": [0.001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "119": [5.5, 0.0, 0.0, 0.0, 5.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "120": [0.0, 1.5, 1.5, 1.5, 6.0, 9.0, 9.0, 9.0, 9.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "121": [0.0, 0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "122": [0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "123": [0.0, 0.0, 0.0, 0.0, 0.003, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "124": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "125": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "126": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "127": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "128": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "129": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "130": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "131": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "137": [1.5, 24.0, 0.0, 0.0, 0.0, 6.0, 6.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "                               Prepare By": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, "sheetNames": ["Dashboard", "RM Mixing2 Batch Log", "Daily Date Report", "Final Monthly Usage", "RM Opening Balance", "F Cookies", "Sheet2", "Daily stock", "Sheet1", "Sheet5", "Production Report", "Consumption Report", "R Packaging", "Mixing-1", "Mixing-2", "Input Batch", "Sheet6", "RM Daily Entry", "RM Mixing2 Monthly", "RM Receive Monthly"]};
+const state={role:localStorage.getItem('rm_role')||'Member',user:localStorage.getItem('rm_user')||'Member User',company:localStorage.getItem('rm_company')||DATA.company,batches:JSON.parse(localStorage.getItem('rm_batches')||'[]'),receives:JSON.parse(localStorage.getItem('rm_receives')||'[]'),approvals:JSON.parse(localStorage.getItem('rm_approvals')||'[]'),audits:JSON.parse(localStorage.getItem('rm_audits')||'[]'),corrections:JSON.parse(localStorage.getItem('rm_corrections')||'{}'),customSheets:JSON.parse(localStorage.getItem('rm_customSheets')||'[]'),customRows:JSON.parse(localStorage.getItem('rm_customRows')||'{}'),rmMaster:JSON.parse(localStorage.getItem('rm_rmMaster')||'null'),productMaster:JSON.parse(localStorage.getItem('rm_productMaster')||'null'),recipeMaster:JSON.parse(localStorage.getItem('rm_recipeMaster')||'null'),users:[]};
+if(!state.rmMaster) state.rmMaster=DATA.rms.map(x=>({...x}));
+if(!state.productMaster) state.productMaster=DATA.products.map(x=>({...x}));
+if(!state.recipeMaster) state.recipeMaster=JSON.parse(JSON.stringify(DATA.recipe));
+const today=()=>new Date().toISOString().slice(0,10),monthNow=()=>new Date().toISOString().slice(0,7),pad=n=>String(n).padStart(2,'0'),num=x=>Number(x||0);
+const rm=c=>state.rmMaster.find(x=>String(x.code)===String(c)),prod=c=>state.productMaster.find(x=>String(x.code)===String(c));
+function save(){for(const [k,v] of Object.entries({rm_role:state.role,rm_user:state.user,rm_company:state.company,rm_batches:state.batches,rm_receives:state.receives,rm_approvals:state.approvals,rm_audits:state.audits,rm_corrections:state.corrections,rm_customSheets:state.customSheets,rm_customRows:state.customRows,rm_rmMaster:state.rmMaster,rm_productMaster:state.productMaster,rm_recipeMaster:state.recipeMaster}))localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v))}
+function batchesFor(d){return state.batches.filter(x=>x.date===d)}function batchQty(d,c){return batchesFor(d).filter(x=>String(x.productCode)===String(c)).reduce((sum,x)=>sum+num(x.qty),0)}
+function recipeQty(code,i){return num((state.recipeMaster[String(code)]||[])[i])}
+function useForRM(d,code){let s=0;state.productMaster.forEach((p,i)=>s+=batchQty(d,p.code)*recipeQty(code,i));return s}
+function receiveFor(d,code){return state.receives.filter(x=>x.date===d&&String(x.rmCode)===String(code)).reduce((s,x)=>s+num(x.qty),0)}
+function monthlyUse(m,code){const days=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();let s=0;for(let d=1;d<=days;d++)s+=useForRM(m+'-'+pad(d),code);return s}
+function monthlyReceive(m,code){return state.receives.filter(x=>x.date.startsWith(m+'-')&&String(x.rmCode)===String(code)).reduce((s,x)=>s+num(x.qty),0)}
+function prevDate(d){const x=new Date(d+'T00:00:00');x.setDate(x.getDate()-1);return x.toISOString().slice(0,10)}
+function closingFor(d,code){const r=rm(code);if(!r)return 0;const rec=receiveFor(d,code),use=useForRM(d,code);return openingFor(d,code)+rec-use}
+function openingFor(d,code){const r=rm(code);if(!r)return 0;const first=d.slice(0,8)+'01';if(d===first)return num(r.opening);const prev=prevDate(d);return closingFor(prev,code)}
+function status(v){return v<0?['SHORTAGE','status-short']:v===0?['ZERO','status-zero']:['OK','status-ok']}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+const navItems=[['dashboard','Dashboard'],['rm-opening','RM Opening Balance'],['rm-daily','RM Daily Entry'],['rm-monthly','RM Receive Monthly'],['input-batch','Input Batch'],['mixing','Mixing-2'],['mix-monthly','RM Mixing2 Monthly'],['daily-report','Daily Date Report'],['final-monthly','Final Monthly Usage'],['batch-log','RM Mixing2 Batch Log'],['company','Company Profile'],['admin','Admin Panel']];
+const protectedCore=['Dashboard','RM Opening Balance','RM Daily Entry','RM Receive Monthly','Input Batch','Mixing-2','RM Mixing2 Monthly','Daily Date Report','Final Monthly Usage','RM Mixing2 Batch Log','Company Profile','Admin Panel'];
+function buildNav(){const n=document.getElementById('nav');n.innerHTML='';navItems.forEach(([id,l])=>{const b=document.createElement('button');b.textContent=l;b.dataset.page=id;b.onclick=()=>show(id);n.appendChild(b)});state.customSheets.forEach(sh=>{const b=document.createElement('button');b.textContent=sh.name;b.dataset.custom=sh.id;b.onclick=()=>openCustomSheet(sh.id);n.appendChild(b)})}
+function show(id){if(id==='admin'&&state.role!=='Admin'){alert('Admin only');return}document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));({dashboard:renderDashboard,'input-batch':renderBatchEntry,'rm-daily':renderReceives,'rm-monthly':renderReceiveMonthly,'rm-opening':renderOpening,mixing:renderMixing,'mix-monthly':renderMixMonthly,'daily-report':renderDaily,'final-monthly':renderFinal,'batch-log':renderLog,admin:renderAdmin}[id]||(()=>{}))()}
+function showOther(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('other').classList.add('active');document.getElementById('otherTitle').textContent=name;document.getElementById('otherInfo').innerHTML='<div class="pills"><span class="pill">Sheet: '+esc(name)+'</span><span class="pill">Core workbook relationship protected</span></div>'}
+function renderDashboard(){
+ const d=today(),r=state.receives.filter(x=>x.date===d).reduce((s,x)=>s+num(x.qty),0),u=state.rmMaster.reduce((s,x)=>s+useForRM(d,x.code),0),stockTotal=state.rmMaster.reduce((s,x)=>s+openingFor(d,x.code)+receiveFor(d,x.code)-useForRM(d,x.code),0),bc=batchesFor(d).length;
+ mReceive.textContent=r.toFixed(3)+' KG';mUse.textContent=u.toFixed(3)+' KG';mBatch.textContent=bc+' Batch';mStock.textContent=stockTotal.toFixed(3)+' KG';
+ bf.innerHTML='<option value="">All Products</option>'+state.productMaster.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>').join('');
+ rf.innerHTML='<option value="">All RM</option>'+state.rmMaster.map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+'</option>').join('');
+ mf.innerHTML='<option value="">All RM</option>'+state.rmMaster.map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+'</option>').join('');
+ dashLists();
+ const stockRows=state.rmMaster.map(x=>({x,c:openingFor(d,x.code)+receiveFor(d,x.code)-useForRM(d,x.code)})).sort((a,b)=>Math.abs(b.c)-Math.abs(a.c)).slice(0,8);
+ stock.innerHTML=stockRows.map(a=>'<div class="dash-row"><span>'+esc(a.x.name)+'</span><b>'+a.c.toFixed(3)+' '+esc(a.x.uom)+'</b></div>').join('')||'<span class="small">No stock data</span>';
+ const acts=[];state.receives.slice().reverse().slice(0,3).forEach(x=>acts.push('<div class="dash-row"><span>Receive — '+esc(rm(x.rmCode)?.name||x.rmCode)+'</span><small>'+num(x.qty).toFixed(3)+' kg</small></div>'));state.batches.slice().reverse().slice(0,3).forEach(x=>acts.push('<div class="dash-row"><span>Batch — '+esc(prod(x.productCode)?.name||x.productCode)+'</span><small>'+num(x.qty)+' batch</small></div>'));recentActivity.innerHTML=acts.slice(0,5).join('')||'<span class="small">No recent activity</span>';
+}
+function dashLists(){
+ const bfVal=bf.value,rfVal=rf.value,mfVal=mf.value,d=today();
+ bl.innerHTML=batchesFor(d).filter(x=>!bfVal||String(prod(x.productCode)?.name||x.productCode)===bfVal).map(x=>'<tr><td>'+esc(prod(x.productCode)?.name||x.productCode)+'</td><td>'+num(x.qty)+'</td><td>'+num(x.qty)+'</td></tr>').join('')||'<tr><td colspan="3">No batch entered</td></tr>';
+ rl.innerHTML=state.receives.filter(x=>x.date===d).filter(x=>!rfVal||String(rm(x.rmCode)?.name||x.rmCode)===rfVal).map(x=>'<tr><td>'+esc(rm(x.rmCode)?.name||x.rmCode)+'</td><td class="num">'+num(x.qty).toFixed(3)+'</td><td>'+esc(rm(x.rmCode)?.uom||'kg')+'</td></tr>').join('')||'<tr><td colspan="3">No receive</td></tr>';
+ ml.innerHTML=state.rmMaster.map(x=>[x,useForRM(d,x.code)]).filter(a=>a[1]>0&&(!mfVal||String(a[0].name)===mfVal)).map(a=>'<tr><td>'+esc(a[0].name)+'</td><td class="num">'+a[1].toFixed(3)+'</td><td>'+esc(a[0].uom)+'</td></tr>').join('')||'<tr><td colspan="3">No Mixing-2 use</td></tr>';
+}
+function renderBatchEntry(){const d=batchDate.value||today(),sh=String(document.getElementById('batchShift')?.value||'1');batchRows.innerHTML='';state.productMaster.forEach(p=>{const a=document.createElement('div');const row=state.batches.find(x=>x.date===d&&String(x.productCode)===String(p.code)&&String(x.shift||'1')===sh);const dayTotal=state.batches.filter(x=>x.date===d&&String(x.productCode)===String(p.code)).reduce((sum,x)=>sum+num(x.qty),0);a.innerHTML='<div class="product-name">'+esc(p.name)+'</div><input class="batchInput" data-code="'+p.code+'" type="number" min="0" step="1" value="'+(row?num(row.qty):'')+'" placeholder="0"><div class="code">'+p.code+' · এই শিফট: '+num(row?.qty)+' · দৈনিক মোট: '+dayTotal+'</div>';batchRows.append(...a.children)});renderBatchRecords()}
+function renderBatchRecords(){const body=document.getElementById('batchRecordsBody');if(!body)return;const d=batchDate.value||today();const rows=state.batches.map((x,i)=>({...x,_idx:i})).filter(x=>x.date===d).sort((a,b)=>String(a.shift||'1').localeCompare(String(b.shift||'1'))||String(prod(a.productCode)?.name||a.productCode).localeCompare(String(prod(b.productCode)?.name||b.productCode)));body.innerHTML=rows.map(x=>'<tr><td>'+esc(x.date)+'</td><td>Shift '+esc(x.shift||'1')+'</td><td>'+esc(prod(x.productCode)?.name||x.productCode)+'</td><td class="num">'+num(x.qty)+'</td><td><button class="secondary" type="button" onclick="editBatchEntry('+x._idx+')">✏️ Edit</button></td></tr>').join('')||'<tr><td colspan="5">এই তারিখে কোনো Batch Entry নেই</td></tr>'}
+window.editBatchEntry=function(index){const x=state.batches[index];if(!x)return alert('Batch entry পাওয়া যায়নি। তালিকা Refresh করে আবার চেষ্টা করুন।');batchDate.value=x.date;document.getElementById('batchShift').value=String(x.shift||'1');renderBatchEntry();const input=Array.from(document.querySelectorAll('.batchInput')).find(el=>String(el.dataset.code)===String(x.productCode));if(input){input.focus();input.scrollIntoView({behavior:'smooth',block:'center'});input.style.outline='3px solid #f59e0b';setTimeout(()=>{if(input.isConnected)input.style.outline=''},1800)}alert('Edit mode: '+(prod(x.productCode)?.name||x.productCode)+' — Shift '+(x.shift||'1')+'। Qty পরিবর্তন করে “Save Shift Batch” চাপুন। আগের Qty যোগ হবে না; সেটিই update হবে।')}
+function saveBatch(){const d=batchDate.value||today();let added=0;document.querySelectorAll('.batchInput').forEach(i=>{const q=num(i.value),c=i.dataset.code;if(q>0){const existing=state.batches.filter(x=>x.date===d&&String(x.productCode)===String(c)).reduce((sum,x)=>sum+num(x.qty),0);state.batches=state.batches.filter(x=>!(x.date===d&&String(x.productCode)===String(c)));state.batches.push({date:d,productCode:c,qty:existing+q,user:state.role,savedAt:new Date().toISOString()});added+=q}});save();renderBatchEntry();renderDashboard();renderMixing();renderMixMonthly();renderDaily();renderFinal();alert(added?'Batch added to daily total ✔ (+'+added+')':'কোনো নতুন Batch Qty দেওয়া হয়নি।')}
+function renderReceives(){recvItem.innerHTML=state.rmMaster.map(x=>'<option value="'+x.code+'">'+x.code+' — '+esc(x.name)+'</option>').join('');recvTable.innerHTML=state.receives.slice().reverse().map((x,j)=>{const i=state.receives.length-1-j,c=state.corrections[i]||0;return '<tr><td>'+x.date+'</td><td>'+x.rmCode+'</td><td>'+esc(rm(x.rmCode)?.name||'')+'</td><td>'+rm(x.rmCode)?.uom+'</td><td class="num">'+num(x.qty).toFixed(3)+'</td><td>'+esc(x.note||'')+'</td><td class="status-ok">OK</td><td>'+ (state.role==='Admin'?'<button class="secondary" onclick="adminEditReceive('+i+')">Edit</button> ':'') + '<button class="secondary" onclick="correctReceive('+i+')">'+(c<3?'Correct ('+c+'/3)':'Limit reached')+'</button></td></tr>'}).join('')||'<tr><td colspan="8">No receive entries</td></tr>'}
+function saveReceive(){const d=recvDate.value||today(),c=recvItem.value,q=num(recvQty.value);if(!q){alert('Receive quantity দিন');return}state.receives.push({date:d,rmCode:c,qty:q,note:recvNote.value||'',user:state.role,savedAt:new Date().toISOString()});save();recvQty.value='';recvNote.value='';renderReceives();renderDashboard();renderReceiveMonthly();renderDaily();renderFinal()}
+function correctReceive(i){const c=state.corrections[i]||0;if(state.role!=='Admin'&&c>=3){alert('Maximum 3 corrections reached');return}const x=state.receives[i],nv=prompt('Current quantity: '+x.qty+'\nNew quantity:',x.qty);if(nv===null)return;const n=num(nv);if(n<0){alert('Receive quantity negative হতে পারবে না');return}if(n===num(x.qty)){alert('নতুন quantity আগের মতোই আছে');return}const reason=prompt('Correction reason লিখুন:','Wrong entry correction');if(reason===null||!reason.trim())return;const now=new Date().toISOString();state.audits.push({entry:i,user:state.user||state.role,old:{date:x.date,rmCode:x.rmCode,qty:x.qty,note:x.note||''},new:{date:x.date,rmCode:x.rmCode,qty:n,note:x.note||''},reason:reason.trim(),time:now,count:c+1});state.corrections[i]=c+1;x.qty=n;x.lastCorrectionAt=now;x.lastCorrectionBy=state.user||state.role;save();renderReceives();renderDashboard();renderDaily();renderFinal()}
+function renderOpening(){const isA=state.role==='Admin';const add=document.getElementById('openingAdminAdd');if(add)add.style.display=isA?'block':'none';rmOpeningBody.innerHTML=state.rmMaster.map((x,i)=>'<tr><td>'+x.code+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.uom)+'</td><td class="num">'+num(x.opening).toFixed(3)+'</td><td class="no-print">'+(isA?'<button class="secondary" onclick="adminEditOpeningRM('+i+')">Edit</button>':'—')+'</td></tr>').join('')}
+function editRmFromMix(index){if(state.role!=='Admin')return;show('admin');setTimeout(()=>{masterTab.value='rm';renderMasterEditor();const rows=masterEditor.querySelectorAll('tbody tr');if(rows[index])rows[index].scrollIntoView({behavior:'smooth',block:'center'});},80)}
+function renderMixing(){const d=mixDate.value||today();let h='<thead><tr><th>Item Code</th><th>Name of materials</th><th>UoM</th>'+state.productMaster.map(p=>'<th class="num">'+esc(p.name)+'</th>').join('')+'<th class="num">Total</th></tr></thead><tbody>';state.rmMaster.forEach((r,ri)=>{let t=0,s='<tr><td>'+r.code+'</td><td>'+esc(r.name)+(state.role==='Admin'?' <button class=\"secondary no-print\" style=\"padding:3px 7px;font-size:11px\" onclick=\"editRmFromMix('+ri+')\">Edit</button>':'')+'</td><td>'+r.uom+'</td>';state.productMaster.forEach((p,i)=>{const v=batchQty(d,p.code)*recipeQty(r.code,i);t+=v;s+='<td class="num">'+(v?v.toFixed(3):'—')+'</td>'});h+=s+'<td class="num"><b>'+t.toFixed(3)+'</b></td></tr>'});mixTable.innerHTML=h+'</tbody>';const eb=document.getElementById('editMixBatchBtn');if(eb){eb.style.display=state.role==='Admin'?'inline-block':'none';eb.onclick=()=>{show('batch');batchDate.value=d;renderBatchEntry();}}}
+function renderMixMonthly(){const m=mixMonth.value||monthNow(),days=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();let h='<thead><tr><th>Item Code</th><th>Item Name</th><th>UoM</th>';for(let d=1;d<=days;d++)h+='<th class="num">Day '+d+'</th>';h+='<th class="num">Total</th></tr></thead><tbody>';state.rmMaster.forEach(r=>{let total=0;h+='<tr><td>'+r.code+'</td><td>'+esc(r.name)+'</td><td>'+r.uom+'</td>';for(let d=1;d<=days;d++){const v=useForRM(m+'-'+pad(d),r.code);total+=v;h+='<td class="num">'+(v?v.toFixed(3):'—')+'</td>'}h+='<td class="num"><b>'+total.toFixed(3)+'</b></td></tr>'});mixMonthlyTable.innerHTML=h+'</tbody>'}
+function renderDaily(){const d=dailyDate.value||today();let h='<thead><tr><th>Item Code</th><th>Item Name</th><th>UoM</th><th class="num">Opening</th><th class="num">Receive</th><th class="num">Use</th><th class="num">Closing Balance</th><th>Status</th><th>Balance</th></tr></thead><tbody>';state.rmMaster.forEach(r=>{const o=openingFor(d,r.code),rec=receiveFor(d,r.code),u=useForRM(d,r.code),c=o+rec-u,s=status(c);h+='<tr><td>'+r.code+'</td><td>'+esc(r.name)+'</td><td>'+r.uom+'</td><td class="num">'+o.toFixed(3)+'</td><td class="num">'+rec.toFixed(3)+'</td><td class="num">'+u.toFixed(3)+'</td><td class="num">'+c.toFixed(3)+'</td><td class="'+s[1]+'">'+s[0]+'</td><td>'+Math.abs(c).toFixed(3)+' kg'+(c<0?' shortage':'')+'</td></tr>'});dailyTable.innerHTML=h+'</tbody>'}
+function renderFinal(){const m=finalMonth.value||monthNow();let h='<thead><tr><th>Item Code</th><th>Item Name</th><th>UoM</th><th class="num">Opening Balance</th><th class="num">Total Receive</th><th class="num">Total Use</th><th class="num">Closing Balance</th><th>Status</th></tr></thead><tbody>',s=[0,0,0,0];state.rmMaster.forEach(r=>{const o=num(r.opening),rec=monthlyReceive(m,r.code),u=monthlyUse(m,r.code),c=o+rec-u,st=status(c);s[0]+=o;s[1]+=rec;s[2]+=u;s[3]+=c;h+='<tr><td>'+r.code+'</td><td>'+esc(r.name)+'</td><td>'+r.uom+'</td><td class="num">'+o.toFixed(3)+'</td><td class="num">'+rec.toFixed(3)+'</td><td class="num">'+u.toFixed(3)+'</td><td class="num">'+c.toFixed(3)+'</td><td class="'+st[1]+'">'+st[0]+'</td></tr>'});finalTable.innerHTML=h+'<tr><th>TOTAL</th><th></th><th></th><th class="num">'+s[0].toFixed(3)+'</th><th class="num">'+s[1].toFixed(3)+'</th><th class="num">'+s[2].toFixed(3)+'</th><th class="num">'+s[3].toFixed(3)+'</th><th></th></tr></tbody>'}
+function renderReceiveMonthly(){const m=recvMonth.value||monthNow(),days=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();let h='<tr><th>Item Code</th><th>Item Name</th><th>UoM</th>';for(let d=1;d<=days;d++)h+='<th class="num">Day '+d+'</th>';h+='<th class="num">Total</th></tr>';recvMonthlyHead.innerHTML=h;let b='';state.rmMaster.forEach(r=>{let t=0;b+='<tr><td>'+r.code+'</td><td>'+esc(r.name)+'</td><td>'+r.uom+'</td>';for(let d=1;d<=days;d++){const v=receiveFor(m+'-'+pad(d),r.code);t+=v;b+='<td class="num">'+(v?v.toFixed(3):'—')+'</td>'}b+='<td class="num"><b>'+t.toFixed(3)+'</b></td></tr>'});recvMonthlyBody.innerHTML=b}
+function renderLog(){batchLogBody.innerHTML=state.batches.slice().reverse().map(x=>'<tr><td>'+x.date+'</td><td>'+esc(prod(x.productCode)?.name||x.productCode)+'</td><td>Shift '+esc(x.shift||'1')+'</td><td>'+x.qty+'</td><td>Recipe-linked</td><td>'+new Date(x.savedAt).toLocaleString()+'</td></tr>').join('')||'<tr><td colspan="5">No saved batch log</td></tr>'}
+function addCustomColumnRow(col={name:'',type:'text',formula:''}){const wrap=document.getElementById('customCols');const row=document.createElement('div');row.className='custom-col';row.innerHTML='<input class="cc-name" placeholder="Column name" value="'+esc(col.name||'')+'"><select class="cc-type"><option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="dropdown">Dropdown</option><option value="formula">Formula</option></select><input class="cc-formula" placeholder="Formula (only for Formula type)" value="'+esc(col.formula||'')+'"><button class="danger cc-remove">Remove</button>';row.querySelector('.cc-type').value=col.type||'text';row.querySelector('.cc-remove').onclick=()=>row.remove();wrap.appendChild(row)}
+function collectCustomColumns(){return [...document.querySelectorAll('#customCols .custom-col')].map(r=>({name:r.querySelector('.cc-name').value.trim(),type:r.querySelector('.cc-type').value,formula:r.querySelector('.cc-formula').value.trim()})).filter(x=>x.name)}
+function renderProtected(){protectedList.innerHTML=protectedCore.map(x=>'<span>'+esc(x)+'</span>').join('')}
+function renderCustomAdminList(){customSheetAdminList.innerHTML=state.customSheets.length?state.customSheets.map((sh,i)=>'<div class="card" style="margin:8px 0;padding:12px"><b>'+esc(sh.name)+'</b><div class="small">'+esc(sh.description||'')+' · '+(sh.access==='member'?'Members + Admin':'Admin only')+' · '+sh.columns.length+' columns</div><div class="toolbar" style="margin-top:8px"><button class="secondary" onclick="openCustomSheet(\''+sh.id+'\')">Open</button><button class="danger" onclick="deleteCustomSheet(\''+sh.id+'\')">Delete</button></div></div>').join(''):'<span class="small">No Admin-created sheets yet.</span>'}
+function renderRequestSelectors(){
+  if(document.getElementById('productReqCode')) productReqCode.innerHTML=state.productMaster.map(x=>'<option value="'+x.code+'">'+x.code+' — '+esc(x.name)+'</option>').join('');
+  if(document.getElementById('rmReqCode')) rmReqCode.innerHTML=state.rmMaster.map(x=>'<option value="'+x.code+'">'+x.code+' — '+esc(x.name)+'</option>').join('');
+}
+function addApproval(type,oldv,newv,meta){state.approvals.push({type,old:oldv,new:newv,meta:meta||{},user:state.user,time:new Date().toISOString(),status:'Pending'});save();renderAdmin();alert('Request sent ✔');}
+function approve(i){if(state.role!=='Admin')return;const a=state.approvals[i];if(!a||a.status!=='Pending')return;const m=a.meta||{};if(a.type==='Company Name'){state.company=a.new;companyTop.textContent=state.company;companyInput.value=state.company}else if(a.type==='RM Rename'){const x=rm(m.code);if(x)x.name=a.new}else if(a.type==='Product Rename'){const x=prod(m.code);if(x)x.name=a.new}else if(a.type==='Add RM'){const code=Number(m.code);if(!rm(code)){state.rmMaster.push({code,name:a.new,uom:m.uom||'kg',opening:0});state.recipeMaster[String(code)]=state.productMaster.map(()=>0)}}else if(a.type==='Add Product'){const code=Number(m.code);if(!prod(code)){state.productMaster.push({code,name:a.new});Object.keys(state.recipeMaster).forEach(k=>state.recipeMaster[k].push(0))}}a.status='Approved';a.approvedBy=state.user;a.approvedAt=new Date().toISOString();save();renderAllAfterMaster();alert('Approved ✔')}
+function reject(i){if(state.role!=='Admin')return;const a=state.approvals[i];if(!a)return;a.status='Rejected';a.approvedBy=state.user;a.approvedAt=new Date().toISOString();save();renderAdmin()}
+function renderAllAfterMaster(){buildNav();renderRequestSelectors();renderDashboard();renderBatchEntry();renderReceives();renderReceiveMonthly();renderOpening();renderMixing();renderMixMonthly();renderDaily();renderFinal();renderLog();renderAdmin()}
+function renderMasterEditor(){if(state.role!=='Admin'){masterEditor.innerHTML='<span class="small">Admin only</span>';return}const t=masterTab.value;if(t==='rm'){masterEditor.innerHTML='<table><thead><tr><th>Code</th><th>Name</th><th>UoM</th><th>Opening</th><th>Save</th></tr></thead><tbody>'+state.rmMaster.map((x,i)=>'<tr><td>'+x.code+'</td><td><input data-mi="'+i+'" data-f="name" value="'+esc(x.name)+'"></td><td><input data-mi="'+i+'" data-f="uom" value="'+esc(x.uom)+'"></td><td><input type="number" step="0.001" data-mi="'+i+'" data-f="opening" value="'+num(x.opening)+'"></td><td><button class="secondary" onclick="saveRmMaster('+i+')">Save</button></td></tr>').join('')+'</tbody></table><div class="toolbar" style="margin-top:10px"><input id="newRmCode" type="number" placeholder="New RM Code"><input id="newRmName" placeholder="New RM Name"><input id="newRmUom" placeholder="UoM" value="kg"><button class="primary" onclick="adminAddRm()">Add RM</button></div>'}else if(t==='product'){masterEditor.innerHTML='<table><thead><tr><th>Code</th><th>Product Name</th><th>Save</th></tr></thead><tbody>'+state.productMaster.map((x,i)=>'<tr><td>'+x.code+'</td><td><input data-pi="'+i+'" value="'+esc(x.name)+'"></td><td><button class="secondary" onclick="saveProductMaster('+i+')">Save</button></td></tr>').join('')+'</tbody></table><div class="toolbar" style="margin-top:10px"><input id="newProdCode" type="number" placeholder="New Product Code"><input id="newProdName" placeholder="New Product Name"><button class="primary" onclick="adminAddProduct()">Add Product</button></div>'}else{let h='<div class="tablewrap"><table><thead><tr><th>RM</th>'+state.productMaster.map(p=>'<th>'+esc(p.name)+'</th>').join('')+'</tr></thead><tbody>';state.rmMaster.forEach((r,ri)=>{h+='<tr><td>'+r.code+' — '+esc(r.name)+'</td>';state.productMaster.forEach((p,pi)=>{h+='<td><input type="number" step="0.000001" id="rec_'+ri+'_'+pi+'" value="'+recipeQty(r.code,pi)+'" style="width:90px"></td>'});h+='</tr>'});h+='</tbody></table></div><button class="primary" onclick="saveAllRecipes()">Save Recipe</button>';masterEditor.innerHTML=h}}
+function saveRmMaster(i){if(state.role!=='Admin')return;const rows=masterEditor.querySelectorAll('[data-mi="'+i+'"]');const x=state.rmMaster[i];rows.forEach(e=>x[e.dataset.f]=e.dataset.f==='opening'?num(e.value):e.value.trim());save();renderAllAfterMaster()}
+function saveProductMaster(i){if(state.role!=='Admin')return;const e=masterEditor.querySelector('[data-pi="'+i+'"]');if(e)state.productMaster[i].name=e.value.trim()||state.productMaster[i].name;save();renderAllAfterMaster()}
+function adminAddRm(){if(state.role!=='Admin')return;const code=Number(newRmCode.value),name=newRmName.value.trim(),uom=newRmUom.value.trim()||'kg';if(!code||!name||rm(code)){alert('Valid unique RM code/name দিন');return}state.rmMaster.push({code,name,uom,opening:0});state.recipeMaster[String(code)]=state.productMaster.map(()=>0);save();renderAllAfterMaster();alert('RM added ✔ Recipe quantity = 0')}
+function adminAddProduct(){if(state.role!=='Admin')return;const code=Number(newProdCode.value),name=newProdName.value.trim();if(!code||!name||prod(code)){alert('Valid unique product code/name দিন');return}state.productMaster.push({code,name});Object.keys(state.recipeMaster).forEach(k=>state.recipeMaster[k].push(0));save();renderAllAfterMaster();alert('Product added ✔')}
+function saveAllRecipes(){if(state.role!=='Admin')return;state.rmMaster.forEach((r,ri)=>{state.recipeMaster[String(r.code)]=state.productMaster.map((p,pi)=>num(document.getElementById('rec_'+ri+'_'+pi)?.value))});save();renderAllAfterMaster();alert('Mixing-2 recipe saved ✔')}
+function renderAdmin(){renderUsers();approvals.innerHTML=state.approvals.length?state.approvals.map((x,i)=>'<div class="card"><b>'+esc(x.type)+'</b> — '+esc(x.old||'')+' → '+esc(x.new||'')+'<div class="small">'+esc(x.user||'')+' · '+esc(x.time||'')+' · '+x.status+'</div>'+(x.status==='Pending'?'<div class="toolbar" style="margin-top:8px"><button class="primary" onclick="approve('+i+')">Approve</button><button class="danger" onclick="reject('+i+')">Reject</button></div>':'')+'</div>').join(''):'<span class="small">No pending requests</span>';auditBody.innerHTML=state.audits.slice().reverse().map(x=>'<tr><td>'+x.entry+'</td><td>'+esc(x.user)+'</td><td>'+esc(typeof x.old==='object'?JSON.stringify(x.old):x.old)+'</td><td>'+esc(typeof x.new==='object'?JSON.stringify(x.new):x.new)+'</td><td>'+esc(x.reason||'')+'<br><small>'+x.time+'</small></td><td>'+x.count+'/3</td></tr>').join('')||'<tr><td colspan="6">No corrections</td></tr>';renderProtected();renderCustomAdminList();if(document.getElementById('masterEditor'))renderMasterEditor()}
+function createCustomSheet(){if(state.role!=='Admin'){alert('Admin only');return}const name=customSheetName.value.trim();const description=customSheetDesc.value.trim();const access=customSheetAccess.value;const columns=collectCustomColumns();if(!name){alert('Sheet name দিন');return}if(protectedCore.some(x=>x.toLowerCase()===name.toLowerCase())){alert('এই নামটি protected core sheet-এর জন্য reserved');return}if(state.customSheets.some(x=>x.name.toLowerCase()===name.toLowerCase())){alert('এই নামে sheet already আছে');return}if(!columns.length){alert('কমপক্ষে ১টি column দিন');return}if(columns.some(c=>!c.name)){alert('Column name দিন');return}const id='custom_'+Date.now();state.customSheets.push({id,name,description,access,columns,createdBy:state.role,createdAt:new Date().toISOString()});state.customRows[id]=[];save();customSheetName.value='';customSheetDesc.value='';customCols.innerHTML='';addCustomColumnRow();buildNav();renderAdmin();openCustomSheet(id);alert('New Sheet created ✔')}
+function deleteCustomSheet(id){if(state.role!=='Admin')return;const sh=state.customSheets.find(x=>x.id===id);if(!sh)return;if(!confirm('Delete sheet "'+sh.name+'"?'))return;state.customSheets=state.customSheets.filter(x=>x.id!==id);delete state.customRows[id];save();buildNav();show('admin');renderAdmin()}
+function openCustomSheet(id){const sh=state.customSheets.find(x=>x.id===id);if(!sh)return;if(sh.access==='admin'&&state.role!=='Admin'){alert('Admin only');return}document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('custom-sheet').classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.custom===id));customTitle.textContent=sh.name;customDesc.textContent=sh.description||'Admin-created sheet';addCustomRow.disabled=state.role!=='Admin'&&sh.access==='admin';renderCustomSheet(id)}
+function cellName(colIndex,rowIndex){let n='';let x=colIndex+1;while(x){let r=(x-1)%26;n=String.fromCharCode(65+r)+n;x=Math.floor((x-1)/26)}return n+rowIndex}
+function colIndexFromLetters(letters){let n=0;for(const ch of letters.toUpperCase())n=n*26+(ch.charCodeAt(0)-64);return n-1}
+function getCellValue(row,sh,ref){const m=String(ref).match(/^([A-Z]+)(\d+)$/i);if(!m)return 0;const ci=colIndexFromLetters(m[1]);const col=sh.columns[ci];if(!col)return 0;return row.values?.[ci]??''}
+function evalCustomFormula(formula,row,sh,rowNumber){try{let f=String(formula||'').trim();if(f.startsWith('='))f=f.slice(1);f=f.replace(/SUM\(([A-Z]+\d+):([A-Z]+\d+)\)/gi,(m,a,b)=>{const ma=a.match(/^([A-Z]+)(\d+)$/i),mb=b.match(/^([A-Z]+)(\d+)$/i);if(!ma||!mb)return '0';const s=colIndexFromLetters(ma[1]),e=colIndexFromLetters(mb[1]);let z=0;for(let i=s;i<=e;i++)z+=num(row.values?.[i]);return String(z)});f=f.replace(/\b([A-Z]+)(\d+)\b/gi,(m,letters,n)=>{if(Number(n)!==rowNumber)return '0';const v=getCellValue(row,sh,m);return typeof v==='number'?String(v):JSON.stringify(v??'')});f=f.replace(/\bIF\s*\(/gi,'IF(');const IF=(c,a,b)=>c?a:b;const result=Function('IF','return ('+f+')')(IF);return result}catch(e){return ''}}
+function formulaValue(col,row,sh,rowNumber){return evalCustomFormula(col.formula,row,sh,rowNumber)}
+function renderCustomSheet(id){const sh=state.customSheets.find(x=>x.id===id);if(!sh)return;const rows=state.customRows[id]||[];let h='<thead><tr>'+sh.columns.map(c=>'<th>'+esc(c.name)+(c.type==='formula'?' <span class="small">ƒx</span>':'')+'</th>').join('')+'<th class="no-print">Action</th></tr></thead><tbody>';rows.forEach((row,ri)=>{const rn=ri+2;h+='<tr>';sh.columns.forEach((c,ci)=>{let v=c.type==='formula'?formulaValue(c,row,sh,rn):(row.values?.[ci]??'');if(c.type==='formula')h+='<td class="readonly-cell">'+esc(v)+'</td>';else h+='<td><input data-cr="'+ri+'" data-cc="'+ci+'" value="'+esc(v)+'" type="'+(c.type==='number'?'number':c.type==='date'?'date':'text')+'" style="min-width:120px"></td>'});h+='<td class="no-print"><button class="danger" onclick="deleteCustomRow(\''+id+'\','+ri+')">Delete</button></td></tr>'});if(!rows.length)h+='<tr><td colspan="'+(sh.columns.length+1)+'" class="custom-empty">No rows yet. '+(sh.access==='admin'&&state.role!=='Admin'?'':'Add a row to start.')+'</td></tr>';h+='</tbody>';customTable.innerHTML=h;document.querySelectorAll('#customTable input[data-cr]').forEach(inp=>inp.onchange=()=>{const ri=+inp.dataset.cr,ci=+inp.dataset.cc;const c=sh.columns[ci];if(c.type==='formula')return;state.customRows[id][ri].values[ci]=c.type==='number'?num(inp.value):inp.value;state.customRows[id][ri].updatedAt=new Date().toISOString();save();renderCustomSheet(id)})}
+function addCustomDataRow(){const id=customTitle.textContent;const sh=state.customSheets.find(x=>x.name===id);if(!sh)return;if(sh.access==='admin'&&state.role!=='Admin'){alert('Admin only');return}const values=sh.columns.map(c=>c.type==='formula'?'':c.type==='number'?0:'');(state.customRows[sh.id]||(state.customRows[sh.id]=[])).push({values,createdAt:new Date().toISOString(),user:state.role});save();renderCustomSheet(sh.id)}
+function deleteCustomRow(id,ri){if(state.role!=='Admin'){alert('Only Admin can delete custom rows in this demo');return}state.customRows[id].splice(ri,1);save();renderCustomSheet(id)}
+function renderAdmin(){approvals.innerHTML=state.approvals.length?state.approvals.map((x,i)=>'<div class="card"><b>'+esc(x.type)+'</b> — '+esc(x.old||'')+' → '+esc(x.new||'')+'<div class="small">'+esc(x.user||'')+' · '+esc(x.time||'')+' · '+x.status+'</div>'+(x.status==='Pending'?'<div class="toolbar" style="margin-top:8px"><button class="primary" onclick="approve('+i+')">Approve</button><button class="danger" onclick="reject('+i+')">Reject</button></div>':'')+'</div>').join(''):'<span class="small">No pending requests</span>';auditBody.innerHTML=state.audits.slice().reverse().map(x=>'<tr><td>'+x.entry+'</td><td>'+esc(x.user)+'</td><td>'+x.old+'</td><td>'+x.new+'</td><td>'+x.time+'</td><td>'+x.count+'/3</td></tr>').join('')||'<tr><td colspan="6">No corrections</td></tr>'}
+function approve(i){state.approvals[i].status='Approved';state.approvals[i].approvedBy='Admin';state.approvals[i].approvedAt=new Date().toISOString();save();renderAdmin()}function reject(i){state.approvals[i].status='Rejected';save();renderAdmin()}
+function setRole(r){state.role=r;save();if(window.authUser){state.user=window.authUser.name||window.authUser.email;state.role=window.authUser.role||r;updateAuthLabel()}renderDashboard()}function closeRole(){roleModal.classList.remove('show')}
+function updateAuthLabel(){const el=document.getElementById('authUserLabel');if(el)el.innerHTML=esc((window.authUser&&window.authUser.name)||state.user||'User')+' <small>('+esc((window.authUser&&window.authUser.role)||state.role)+')</small>'}
+function lockForAuth(){document.body.classList.add('auth-locked');document.getElementById('authGate').style.display='flex'}
+function unlockForAuth(){document.body.classList.remove('auth-locked');document.getElementById('authGate').style.display='none';updateAuthLabel()}
+async function apiAuth(action,payload){return {ok:false,offline:true,error:'Offline-only mode: Google Sheets / internet backend is disabled.'}}
+async function loginUser(email,password){const e=(email||'').trim();if(!e||!password){authMsg.textContent='Email এবং Password দিন';return}const role=(document.getElementById('localRole')?.value||'Member');window.authUser={email:e,name:e.split('@')[0],role};window.authToken='demo';localStorage.setItem('rm_auth_token','demo');localStorage.setItem('rm_auth_user',JSON.stringify(window.authUser));state.user=window.authUser.name;state.role=role;save();unlockForAuth();renderDashboard();renderAdmin();authMsg.textContent=''}
+async function logoutUser(){try{const cfg=window.RM_AUTH_CONFIG||{};if(cfg.url&&window.authToken&&window.authToken!=='demo')await apiAuth('logout',{token:window.authToken})}catch(e){}localStorage.removeItem('rm_auth_token');localStorage.removeItem('rm_auth_user');window.authUser=null;window.authToken=null;state.role='Member';state.user='Signed out';save();lockForAuth() }
+async function restoreAuthSession(){const token=localStorage.getItem('rm_auth_token');if(token==='demo'){try{window.authUser=JSON.parse(localStorage.getItem('rm_auth_user')||'null')}catch(e){}state.user=window.authUser?.name||'Local User';state.role=window.authUser?.role||'Member';unlockForAuth();renderDashboard();renderAdmin();return true}lockForAuth();return false}
+
+function printPage(id){
+  const src=document.getElementById(id);
+  if(!src){alert('Report not found');return;}
+  const clone=src.cloneNode(true);
+  clone.querySelectorAll('.no-print').forEach(e=>e.remove());
+  const title=(clone.querySelector('h1')?.textContent||'RM Stock Management Report').trim();
+  const css=Array.from(document.querySelectorAll('style')).map(x=>x.textContent).join('\n');
+  const w=window.open('','_blank');
+  if(!w){
+    alert('Print window blocked. Please allow pop-ups/new windows for this app, then try again.');
+    return;
+  }
+  w.document.open();
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+'</title><style>'+css+'\nbody{background:#fff!important;padding:18px!important}.page{display:block!important;max-width:none!important}.card{box-shadow:none!important}.toolbar,.no-print{display:none!important}@page{size:A4 portrait;margin:10mm}</style></head><body>'+clone.outerHTML+'<script>window.onload=function(){setTimeout(function(){window.print();},400)}<\\/script></body></html>');
+  w.document.close();
+}
+function pdfEscape(s){return String(s??'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[^\x20-\x7E]/g,'?')}
+function pdfRows(id){
+  const page=document.getElementById(id); if(!page) return {title:'RM Stock Report',desc:'',period:'',rows:[]};
+  const title=(page.querySelector('h1')?.textContent||'RM Stock Report').trim();
+  const desc=(page.querySelector('.desc')?.textContent||'').trim();
+  const input=page.querySelector('input[type=date],input[type=month]');
+  const period=input?.value||'';
+  const table=page.querySelector('table'); const rows=[];
+  if(table) table.querySelectorAll('tr').forEach(tr=>{const cells=[...tr.querySelectorAll('th,td')].map(x=>x.textContent.trim().replace(/\s+/g,' '));if(cells.length)rows.push(cells)});
+  return {title,desc,period,rows};
+}
+function buildReportPdf(id){
+  const d=pdfRows(id),W=842,H=595,ML=28,MR=28,MT=34,MB=28,contentW=W-ML-MR;
+  const objs=[],add=o=>{objs.push(o);return objs.length};
+  const catalog=add(''),pagesObj=add(''),font=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  const pageNums=[];let lines=[];
+  let widths;
+  if(id==='daily-report') widths=[48,120,42,72,72,60,78,58,72];
+  else if(id==='final-monthly') widths=[48,150,42,90,90,78,90,62];
+  else widths=new Array(d.rows[0]?.length||8).fill(contentW/(d.rows[0]?.length||8));
+  const sum=widths.reduce((a,b)=>a+b,0); widths=widths.map(x=>x*contentW/sum);
+  function wrapCell(text,maxChars){const words=String(text||'').split(/\s+/),out=[];let line='';words.forEach(w=>{if(!line)line=w;else if((line+' '+w).length<=maxChars)line+=' '+w;else{out.push(line);line=w}});if(line||!out.length)out.push(line);return out}
+  function addPage(pageLines){const cmds=['BT','/F1 8.2 Tf'];pageLines.forEach(x=>{cmds.push('1 0 0 1 '+x.x.toFixed(1)+' '+x.y.toFixed(1)+' Tm','('+pdfEscape(x.text)+') Tj')});cmds.push('ET');const stream=cmds.join('\n');const cont=add('<< /Length '+stream.length+' >>\nstream\n'+stream+'\nendstream');const pg=add('<< /Type /Page /Parent '+pagesObj+' 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 '+font+' 0 R >> >> /Contents '+cont+' 0 R >>');pageNums.push(pg)}
+  let y=H-MT;
+  function text(t,x,yy){lines.push({text:t,x,y:yy})}
+  function newPage(){if(lines.length)addPage(lines);lines=[];y=H-MT;text(d.title,ML,y);y-=16;if(d.desc){text(d.desc,ML,y);y-=12}if(d.period){text(d.period,ML,y);y-=16}}
+  text(d.title,ML,y);y-=16;if(d.desc){text(d.desc,ML,y);y-=12}if(d.period){text(d.period,ML,y);y-=16}
+  const header=d.rows[0]||[];
+  function rowHeight(cells){let max=1;cells.forEach((c,i)=>{const chars=Math.max(5,Math.floor((widths[i]||contentW/cells.length)/4.2));max=Math.max(max,wrapCell(c,chars).length)});return max*10+5}
+  function drawRow(cells){const h=rowHeight(cells);if(y-h<MB+14){newPage();if(header.length && cells!==header)drawRow(header);if(cells!==header)drawRow(cells);return}let x=ML;cells.forEach((c,i)=>{const w=widths[i]||contentW/cells.length;wrapCell(c,Math.max(5,Math.floor(w/4.2))).forEach((ln,j)=>text(ln,x+3,y-10*j));x+=w});y-=h}
+  if(header.length) drawRow(header);d.rows.slice(1).forEach(r=>drawRow(r));if(lines.length)addPage(lines);
+  objs[catalog-1]='<< /Type /Catalog /Pages '+pagesObj+' 0 R >>';objs[pagesObj-1]='<< /Type /Pages /Kids ['+pageNums.map(n=>n+' 0 R').join(' ')+'] /Count '+pageNums.length+' >>';
+  let pdf='%PDF-1.4\n';const offsets=[0];objs.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});const xref=pdf.length;pdf+='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n';for(let i=1;i<offsets.length;i++)pdf+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';pdf+='trailer\n<< /Size '+(objs.length+1)+' /Root '+catalog+' 0 R >>\nstartxref\n'+xref+'\n%%EOF';return pdf;
+}
+function downloadPdf(id){try{const pdf=buildReportPdf(id);const base=id==='final-monthly'?'Final_Monthly_Usage':id==='daily-report'?'Daily_Date_Report':'Mixing2_Report';const filename=base+'_'+new Date().toISOString().slice(0,10)+'.pdf';const file=new Blob([pdf],{type:'application/pdf'});const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download=filename;a.setAttribute('download',filename);a.type='application/pdf';a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},15000);alert('A4 landscape PDF তৈরি হয়েছে। ফাইলের নাম .pdf সহ সংরক্ষণ হবে। Downloads/Files-এ দেখুন।')}catch(e){alert('PDF তৈরি করা যায়নি: '+(e.message||e))}}
+
+document.getElementById('loginForm').onsubmit=e=>{e.preventDefault();loginUser(loginEmail.value.trim(),loginPassword.value)};document.getElementById('logoutBtn').onclick=logoutUser;save();companyTop.textContent=state.company;batchDate.value=today();recvDate.value=today();mixDate.value=today();dailyDate.value=today();recvMonth.value=monthNow();mixMonth.value=monthNow();finalMonth.value=monthNow();
+saveBatch.onclick=saveBatch;clearBatch.onclick=()=>document.querySelectorAll('.batchInput').forEach(x=>x.value='');batchDate.onchange=renderBatchEntry;const batchShiftEl=document.getElementById('batchShift');if(batchShiftEl)batchShiftEl.onchange=renderBatchEntry;saveReceive.onclick=saveReceive;recvMonth.onchange=renderReceiveMonthly;mixDate.onchange=renderMixing;mixMonth.onchange=renderMixMonthly;dailyDate.onchange=renderDaily;finalMonth.onchange=renderFinal;finalizeMonthBtn.onclick=async()=>{if(state.role!=='Admin')return alert('Admin only');const m=finalMonth.value||monthNow();if(!confirm('এই মাসের Month-End Snapshot finalize করবেন? '+m+'\nFinalize করার পরের মাসে Closing Balance Opening হিসেবে carry হবে.'))return;const out=await api('finalizeMonth',{month:m});if(!out.ok)return alert(out.error||'Finalize failed');await refreshBackendReports();alert('Month-End Snapshot saved ✔ '+m)};printDaily.onclick=()=>printPage('daily-report');printDailyPdf.onclick=()=>downloadPdf('daily-report');printFinal.onclick=()=>printPage('final-monthly');printFinalPdf.onclick=()=>downloadPdf('final-monthly');printMix.onclick=()=>printPage('mixing');printMixPdf.onclick=()=>downloadPdf('mixing');
+saveCompany.onclick=()=>{if(state.role!=='Admin'){alert('Company name change requires Admin approval');return}state.company=companyInput.value.trim()||state.company;save();companyTop.textContent=state.company;alert('Company name saved ✔')};
+document.getElementById('createUserBtn').onclick=createManagedUser;
+renderRequestSelectors();
+// Attach request handlers only when their corresponding form elements exist.
+// The RM Master Request and Product Master Request forms are intentionally removed from this offline UI.
+const productReqTypeEl=document.getElementById('productReqType');
+const productReqCodeEl=document.getElementById('productReqCode');
+const productReqNameEl=document.getElementById('productReqName');
+const sendProductReqEl=document.getElementById('sendProductReq');
+if(productReqTypeEl && productReqCodeEl && productReqNameEl && sendProductReqEl){
+  productReqTypeEl.onchange=()=>{productReqCodeEl.style.display=productReqTypeEl.value==='rename'?'inline-block':'none'};
+  sendProductReqEl.onclick=()=>{const t=productReqTypeEl.value,n=productReqNameEl.value.trim();if(!n)return alert('New product name দিন');if(t==='rename'){const x=prod(productReqCodeEl.value);if(!x)return;addApproval('Product Rename',x.name,n,{code:x.code})}else{const max=Math.max(0,...state.productMaster.map(x=>Number(x.code)));addApproval('Add Product','',n,{code:max+1})}};
+}
+const rmReqTypeEl=document.getElementById('rmReqType');
+const rmReqCodeEl=document.getElementById('rmReqCode');
+const rmReqNameEl=document.getElementById('rmReqName');
+const rmReqUomEl=document.getElementById('rmReqUom');
+const sendRmReqEl=document.getElementById('sendRmReq');
+if(rmReqTypeEl && rmReqCodeEl && rmReqNameEl && rmReqUomEl && sendRmReqEl){
+  rmReqTypeEl.onchange=()=>{rmReqCodeEl.style.display=rmReqTypeEl.value==='rename'?'inline-block':'none'};
+  sendRmReqEl.onclick=()=>{const t=rmReqTypeEl.value,n=rmReqNameEl.value.trim(),u=rmReqUomEl.value.trim()||'kg';if(!n)return alert('RM name দিন');if(t==='rename'){const x=rm(rmReqCodeEl.value);if(!x)return;addApproval('RM Rename',x.name,n,{code:x.code})}else{const max=Math.max(0,...state.rmMaster.map(x=>Number(x.code)));addApproval('Add RM','',n,{code:max+1,uom:u})}};
+}
+requestCompany.onclick=()=>{const n=companyInput.value.trim();if(!n)return alert('Company name দিন');if(state.role==='Admin'){state.company=n;save();companyTop.textContent=n;alert('Company name saved ✔')}else addApproval('Company Name',state.company,n,{})};masterTab.onchange=renderMasterEditor;renderMaster.onclick=renderMasterEditor;addCustomColumnRow();addCustomCol.onclick=()=>addCustomColumnRow();createCustomSheet.onclick=createCustomSheet;addCustomRow.onclick=addCustomDataRow;refreshCustomSheet.onclick=()=>{const sh=state.customSheets.find(x=>x.name===customTitle.textContent);if(sh)renderCustomSheet(sh.id)};buildNav();lockForAuth();renderBatchEntry();renderReceives();renderReceiveMonthly();renderOpening();renderMixing();renderMixMonthly();renderDaily();renderFinal();renderLog();renderAdmin();
+
+function renderUsers(){
+  const body=document.getElementById('usersBody'); if(!body)return;
+  if(state.role!=='Admin'){body.innerHTML='<tr><td colspan="6">Admin only</td></tr>';return;}
+  body.innerHTML=(state.users||[]).map((u,i)=>'<tr><td>'+esc(u.email)+'</td><td>'+esc(u.name)+'</td><td>'+esc(u.role)+'</td><td>'+ (u.active?'Active':'Inactive') +'</td><td><button class="secondary" onclick="toggleManagedUser('+i+')">'+(u.active?'Deactivate':'Activate')+'</button></td><td><button class="secondary" onclick="resetManagedPassword('+i+')">Reset</button></td></tr>').join('')||'<tr><td colspan="6">No users</td></tr>';
+}
+async function refreshUsers(){if(state.role!=='Admin'||!window.authToken)return;const out=await window.rmBackend.api('listUsers');if(out.ok){state.users=out.users||[];renderUsers();}}
+async function createManagedUser(){if(state.role!=='Admin')return;const email=document.getElementById('newUserEmail').value.trim(),name=document.getElementById('newUserName').value.trim(),role=document.getElementById('newUserRole').value,password=document.getElementById('newUserPassword').value;if(!email||!name||password.length<8)return alert('Email, name এবং 8+ character password দিন');const out=await window.rmBackend.api('createUser',{user:{email,name,role,password}});if(!out.ok)return alert(out.error||'User creation failed');document.getElementById('newUserEmail').value='';document.getElementById('newUserName').value='';document.getElementById('newUserPassword').value='';await refreshUsers();alert('User added ✔')}
+async function toggleManagedUser(i){const u=state.users?.[i];if(!u)return;const action=u.active?'deactivateUser':'activateUser';if(u.active&&!confirm('Deactivate '+u.email+'?'))return;const out=await window.rmBackend.api(action,{email:u.email});if(!out.ok)return alert(out.error||'User status change failed');await refreshUsers();}
+async function resetManagedPassword(i){const u=state.users?.[i];if(!u)return;const p=prompt('New password for '+u.email+' (minimum 8 characters):');if(p===null)return;if(p.length<8)return alert('Password must be at least 8 characters');const out=await window.rmBackend.api('changePassword',{email:u.email,newPassword:p});if(!out.ok)return alert(out.error||'Password reset failed');alert('Password reset ✔')}
+/* V7 backend data bridge — keeps the V5 Fixed UI/calculation layer intact. */
+(function(){
+  async function api(action,payload={}){return {ok:false,offline:true,error:'Offline-only mode: no Google Sheets or internet connection.'};}
+  window.rmBackend={api};
+  async function loadServerData(){
+    if(!window.authToken || window.authToken==='demo') return;
+    const out=await api('loadOperationalData');
+    if(!out.ok) throw new Error(out.error||'Could not load backend data');
+    state.receives=Array.isArray(out.receives)?out.receives:[];
+    state.batches=Array.isArray(out.batches)?out.batches:[];
+    state.audits=Array.isArray(out.audits)?out.audits:[];
+    state.corrections=out.corrections||{};
+    localStorage.setItem('rm_receives',JSON.stringify(state.receives));
+    localStorage.setItem('rm_batches',JSON.stringify(state.batches));
+    localStorage.setItem('rm_audits',JSON.stringify(state.audits));
+    localStorage.setItem('rm_corrections',JSON.stringify(state.corrections));
+    renderBatchEntry();renderReceives();renderReceiveMonthly();renderMixing();renderDaily();renderFinal();renderAdmin();renderDashboard();
+  }
+  window.saveReceive=async function(){
+    if(!window.authToken||window.authToken==='demo'){alert('Personal APK offline mode: local storage is used.');return;}
+    const d=recvDate.value||today(),c=recvItem.value,q=num(recvQty.value);
+    if(!q){alert('Receive quantity দিন');return}
+    const out=await api('createReceive',{entry:{date:d,rmCode:c,qty:q,note:recvNote.value||''}});
+    if(!out.ok){alert(out.error||'Save failed');return}
+    recvQty.value='';recvNote.value='';await loadServerData();
+  };
+  window.correctReceive=async function(i){
+    if(!window.authToken||window.authToken==='demo'){alert('Personal APK offline mode: local storage is used.');return}
+    const x=state.receives[i];if(!x)return;
+    const c=Number(x.correctionCount||state.corrections[x.id]||0);
+    if(state.role!=='Admin'&&c>=3){alert('Maximum 3 corrections reached');return}
+    const nv=prompt('Current quantity: '+x.qty+'\nNew quantity:',x.qty);if(nv===null)return;
+    const n=num(nv);if(n<0){alert('Receive quantity negative হতে পারবে না');return}
+    if(n===num(x.qty)){alert('নতুন quantity আগের মতোই আছে');return}
+    const reason=prompt('Correction reason লিখুন:','Wrong entry correction');if(reason===null||!reason.trim())return;
+    const out=await api('correctReceive',{entryId:x.id,newQty:n,reason:reason.trim()});
+    if(!out.ok){alert(out.error||'Correction failed');return}
+    await loadServerData();alert(state.role==='Admin'?'Correction saved ✔ (Admin unlimited)':'Correction saved ('+(out.correctionCount||c+1)+'/3)');
+  };
+  window.saveBatch=async function(){
+    if(!window.authToken||window.authToken==='demo'){alert('Personal APK offline mode: local storage is used.');return}
+    const d=batchDate.value||today(),entries=[];
+    document.querySelectorAll('.batchInput').forEach(i=>{const q=num(i.value),c=i.dataset.code,old=state.batches.find(x=>x.date===d&&String(x.productCode)===String(c)); if(q>0||(old&&q===0)){let reason=''; if(old&&num(old.qty)!==q){reason=prompt('Batch '+c+' correction reason লিখুন:','Wrong batch quantity correction')||''; if(!reason.trim())return;} entries.push({date:d,productCode:c,qty:q,reason:reason.trim()});}});
+    const out=await api('saveBatch',{date:d,entries});
+    if(!out.ok){alert(out.error||'Batch save failed');return}
+    await loadServerData();renderBatchEntry();alert('Batch saved ✔');
+  };
+  async function loadSystemData(){
+    if(!window.authToken || window.authToken==='demo') return;
+    const out=await api('loadSystemData'); if(!out.ok) throw new Error(out.error||'Could not load master data');
+    if(Array.isArray(out.rms)&&out.rms.length) state.rmMaster=out.rms;
+    if(Array.isArray(out.products)&&out.products.length) state.productMaster=out.products;
+    if(out.recipe){ const mapped={}; Object.keys(out.recipe).forEach(rm=>{mapped[rm]=state.productMaster.map(p=>Number(out.recipe[rm]?.[String(p.code)]||0));}); state.recipeMaster=mapped; }
+    if(out.company) state.company=out.company;
+    save(); companyTop.textContent=state.company; companyInput.value=state.company;
+    renderRequestSelectors(); renderBatchEntry(); renderReceives(); renderReceiveMonthly(); renderOpening(); renderMixing(); renderMixMonthly(); renderDaily(); renderFinal(); renderDashboard(); renderAdmin();
+  }
+  window.loadSystemData=loadSystemData;
+  async function loadReportData(date,month){
+    if(!window.authToken||window.authToken==='demo') return null;
+    const out=await api('loadReportData',{date:date||dailyDate.value||today(),month:month||finalMonth.value||monthNow()});
+    if(!out.ok) throw new Error(out.error||'Could not load report data');
+    state.serverReports=out; return out;
+  }
+  window.loadReportData=loadReportData;
+  async function refreshBackendReports(){
+    try{
+      const out=await loadReportData();
+      if(out){ renderDashboard(); renderReceiveMonthly(); renderMixMonthly(); renderDaily(); renderFinal(); renderLog(); }
+    }catch(e){console.error(e)}
+  }
+  window.refreshBackendReports=refreshBackendReports;
+  window.saveRmMaster=async function(i){ if(state.role!=='Admin') return; const x=state.rmMaster[i]; const row=document.querySelectorAll('#masterEditor tbody tr')[i]; const inputs=row?.querySelectorAll('input')||[]; const data={code:x.code,name:inputs[0]?.value||x.name,uom:inputs[1]?.value||x.uom,opening:num(inputs[2]?.value||x.opening)}; const out=await api('saveRmMaster',{index:i,data}); if(!out.ok)return alert(out.error||'Save failed'); state.rmMaster[i]={code:String(out.code||data.code),name:String(out.name||data.name),uom:String(out.uom||data.uom),opening:num(out.opening??data.opening)}; save(); await loadSystemData(); alert('RM saved ✔ — all pages updated'); };
+  window.adminAddRm=async function(){if(state.role!=='Admin')return;const code=String(newRmCode.value),name=newRmName.value.trim(),uom=newRmUom.value.trim()||'kg';if(!code||!name||rm(code)){alert('Valid unique RM code/name দিন');return}const out=await api('addRm',{data:{code,name,uom}});if(!out.ok)return alert(out.error||'Add failed');await loadSystemData();alert('RM added ✔ — all pages updated; Recipe quantity = 0');};
+  window.saveProductMaster=async function(i){if(state.role!=='Admin')return;const x=state.productMaster[i];const inp=document.querySelectorAll('#masterEditor tbody tr')[i]?.querySelector('input');const data={code:x.code,name:inp?.value||x.name};const out=await api('saveProductMaster',{index:i,data});if(!out.ok)return alert(out.error||'Save failed');x.name=data.name;save();await loadSystemData();alert('Product saved ✔');};
+  window.adminAddProduct=async function(){if(state.role!=='Admin')return;const code=String(newProdCode.value),name=newProdName.value.trim();if(!code||!name||prod(code)){alert('Valid unique product code/name দিন');return}const out=await api('addProduct',{data:{code,name}});if(!out.ok)return alert(out.error||'Add failed');state.productMaster.push({code,name});Object.keys(state.recipeMaster).forEach(k=>state.recipeMaster[k].push(0));save();await loadSystemData();alert('Product added ✔');};
+  window.saveAllRecipes=async function(){if(state.role!=='Admin')return;const recipe={};state.rmMaster.forEach((r,ri)=>{recipe[String(r.code)]={};state.productMaster.forEach((p,pi)=>{recipe[String(r.code)][String(p.code)]=num(document.getElementById('rec_'+ri+'_'+pi)?.value)});});const out=await api('saveRecipes',{recipe});if(!out.ok)return alert(out.error||'Recipe save failed');state.recipeMaster={};Object.keys(recipe).forEach(k=>{state.recipeMaster[k]=state.productMaster.map(p=>num(recipe[k][String(p.code)]));});save();await loadSystemData();alert('Mixing-2 recipe saved ✔');};
+  window.saveCompany=async function(){if(state.role!=='Admin')return alert('Company name change requires Admin');const name=companyInput.value.trim()||state.company;const out=await api('saveCompany',{name});if(!out.ok)return alert(out.error||'Save failed');state.company=name;save();companyTop.textContent=name;alert('Company Name saved ✔');};
+  async function loadServerAdminData(){
+    if(!window.authToken||window.authToken==='demo'||state.role!=='Admin') return;
+    const [rq,au,us]=await Promise.all([api('listRequests'),api('listAdminAudit'),api('listUsers')]);
+    if(us.ok) state.users=us.users||[];
+    if(rq.ok) state.approvals=(rq.requests||[]).map(x=>({id:x.id,type:x.type,old:x.oldValue,new:x.newValue,user:x.requestedBy,time:x.requestedAt,status:x.status,approvedBy:x.approvedBy,approvedAt:x.approvedAt,reason:x.reason,meta:{target:x.target}}));
+    save(); renderAdmin(); renderUsers();
+  }
+  window.loadServerAdminData=loadServerAdminData;
+  window.addApproval=async function(type,oldv,newv,meta){
+    if(!window.authToken||window.authToken==='demo'){alert('Personal APK offline mode: local requests are used.');return}
+    const map={'Product Rename':'PRODUCT_RENAME','Add Product':'PRODUCT_ADD','RM Rename':'RM_RENAME','Add RM':'RM_ADD','Company Name':'COMPANY_CHANGE'};
+    const reqType=map[type]; if(!reqType)return alert('Unsupported request');
+    const target=String(meta?.code||'company');
+    const out=await api('createRequest',{request:{type:reqType,target,oldValue:oldv||'',newValue:newv||'',reason:'Member change request'}});
+    if(!out.ok)return alert(out.error||'Request failed');
+    await loadServerAdminData(); alert('Request sent ✔');
+  };
+  window.approve=async function(i){
+    if(state.role!=='Admin')return; const a=state.approvals[i]; if(!a||a.status!=='Pending')return;
+    const note=prompt('Approval note (optional):','Approved')??'Approved'; const out=await api('decideRequest',{requestId:a.id,decision:'Approved',note}); if(!out.ok)return alert(out.error||'Approval failed');
+    await loadServerData(); await loadSystemData(); await loadServerAdminData(); alert('Approved ✔');
+  };
+  window.reject=async function(i){
+    if(state.role!=='Admin')return; const a=state.approvals[i]; if(!a||a.status!=='Pending')return;
+    const note=prompt('Rejection reason:','Rejected by Admin'); if(note===null)return; const out=await api('decideRequest',{requestId:a.id,decision:'Rejected',note}); if(!out.ok)return alert(out.error||'Reject failed');
+    await loadServerAdminData(); alert('Rejected');
+  };
+  const oldLogin=window.loginUser;
+  window.loginUser=async function(email,password){
+    await oldLogin(email,password);
+    if(window.authUser&&window.authToken&&window.authToken!=='demo'){
+      try{await Promise.all([loadServerData(),loadSystemData(),loadServerAdminData()]);}catch(e){console.error(e);alert('Backend data load failed: '+e.message)}
+    }
+  };
+  const oldShow=window.show;
+  window.show=function(id){oldShow(id);if(id==='admin'&&window.authToken&&window.authToken!=='demo')Promise.all([loadServerData(),loadSystemData(),loadServerAdminData()]).catch(console.error)};
+})();
+
+/* V9 workbook-aligned report layer. Existing V5 Fixed UI remains unchanged. */
+(function(){
+  const oldDaily=window.renderDaily, oldFinal=window.renderFinal, oldRecv=window.renderReceiveMonthly, oldMixM=window.renderMixMonthly, oldLog=window.renderLog;
+  function has(){return !!(state.serverReports&&state.serverReports.daily&&state.serverReports.monthly)}
+  window.renderDaily=function(){
+    if(!has()){return oldDaily()}
+    const rows=state.serverReports.daily; let h='<thead><tr><th>Item Code</th><th>Item Name</th><th>UoM</th><th class="num">Opening</th><th class="num">Receive</th><th class="num">Use</th><th class="num">Closing Balance</th><th>Status</th><th>Balance</th></tr></thead><tbody>';
+    rows.forEach(x=>{const st=status(x.closing);h+='<tr><td>'+x.code+'</td><td>'+esc(x.name)+'</td><td>'+x.uom+'</td><td class="num">'+num(x.opening).toFixed(3)+'</td><td class="num">'+num(x.receive).toFixed(3)+'</td><td class="num">'+num(x.use).toFixed(3)+'</td><td class="num">'+num(x.closing).toFixed(3)+'</td><td class="'+st[1]+'">'+x.status+'</td><td>'+Math.abs(num(x.balance)).toFixed(3)+' '+x.uom+(x.closing<0?' shortage':'')+'</td></tr>'});
+    dailyTable.innerHTML=h+'</tbody>';
+  };
+  window.renderFinal=function(){
+    if(!has()){return oldFinal()}
+    const rows=state.serverReports.monthly; let h='<thead><tr><th>Item Code</th><th>Item Name</th><th>UoM</th><th class="num">Opening Balance</th><th class="num">Total Receive</th><th class="num">Total Use</th><th class="num">Closing Balance</th><th>Status</th></tr></thead><tbody>',t=[0,0,0,0];
+    rows.forEach(x=>{t[0]+=num(x.opening);t[1]+=num(x.receive);t[2]+=num(x.use);t[3]+=num(x.closing);const st=status(x.closing);h+='<tr><td>'+x.code+'</td><td>'+esc(x.name)+'</td><td>'+x.uom+'</td><td class="num">'+num(x.opening).toFixed(3)+'</td><td class="num">'+num(x.receive).toFixed(3)+'</td><td class="num">'+num(x.use).toFixed(3)+'</td><td class="num">'+num(x.closing).toFixed(3)+'</td><td class="'+st[1]+'">'+x.status+'</td></tr>'});
+    finalTable.innerHTML=h+'<tr><th>TOTAL</th><th></th><th></th><th class="num">'+t[0].toFixed(3)+'</th><th class="num">'+t[1].toFixed(3)+'</th><th class="num">'+t[2].toFixed(3)+'</th><th class="num">'+t[3].toFixed(3)+'</th><th></th></tr></tbody>';
+  };
+  window.renderReceiveMonthly=function(){
+    if(!has()){return oldRecv()}
+    const m=recvMonth.value||monthNow(),days=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate(),by={};(state.serverReports.receives||[]).forEach(x=>{if(x.date.slice(0,7)!==m)return;(by[x.rmCode]??={});by[x.rmCode][x.date]= (by[x.rmCode][x.date]||0)+num(x.qty)});
+    let h='<tr><th>Item Code</th><th>Item Name</th><th>UoM</th>';for(let d=1;d<=days;d++)h+='<th class="num">Day '+d+'</th>';h+='<th class="num">Total</th></tr>';recvMonthlyHead.innerHTML=h;let b='';state.rmMaster.forEach(r=>{let t=0;b+='<tr><td>'+r.code+'</td><td>'+esc(r.name)+'</td><td>'+r.uom+'</td>';for(let d=1;d<=days;d++){const v=num(by[r.code]?.[m+'-'+pad(d)]);t+=v;b+='<td class="num">'+(v?v.toFixed(3):'—')+'</td>'}b+='<td class="num"><b>'+t.toFixed(3)+'</b></td></tr>'});recvMonthlyBody.innerHTML=b;
+  };
+  window.renderMixMonthly=function(){
+    if(!has()){return oldMixM()}
+    const m=mixMonth.value||monthNow(),days=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate(),u=state.serverReports.useByDate||{};let h='<thead><tr><th>Item Code</th><th>Item Name</th><th>UoM</th>';for(let d=1;d<=days;d++)h+='<th class="num">Day '+d+'</th>';h+='</tr></thead><tbody>';state.rmMaster.forEach(r=>{h+='<tr><td>'+r.code+'</td><td>'+esc(r.name)+'</td><td>'+r.uom+'</td>';for(let d=1;d<=days;d++){const v=num(u[m+'-'+pad(d)]?.[r.code]);h+='<td class="num">'+(v?v.toFixed(3):'—')+'</td>'}h+='</tr>'});mixMonthlyTable.innerHTML=h+'</tbody>';
+  };
+  window.renderLog=function(){
+    if(!state.serverReports||!Array.isArray(state.serverReports.batchLog)){return oldLog()}
+    batchLogBody.innerHTML=state.serverReports.batchLog.slice().reverse().map(x=>'<tr><td>'+esc(x.batchId)+'</td><td>'+esc(x.date)+'</td><td>'+esc(x.rmCode)+'</td><td>'+esc(x.rmName)+'</td><td>'+esc(x.uom)+'</td><td>'+num(x.consumption).toFixed(3)+'</td><td>'+esc(x.source)+'</td><td>'+esc(x.createdAt)+'</td></tr>').join('')||'<tr><td colspan="8">No batch log</td></tr>';
+  };
+  const oldGo=window.show;
+  window.show=function(id){oldGo(id);if(window.authToken&&window.authToken!=='demo'&&(id==='daily-report'||id==='final-monthly'||id==='rm-receive-monthly'||id==='rm-mixing2-monthly'||id==='batch-log'))window.refreshBackendReports();};
+  // Reports load only when their page is opened; this avoids a heavy startup call.
+})();
+
+// Restore the authenticated session after every page/browser refresh.
+(async function(){
+  const restored=await restoreAuthSession();
+  if(restored){
+    try{await Promise.all([loadServerData(),loadSystemData(),state.role==='Admin'?loadServerAdminData():Promise.resolve()]);} 
+    catch(e){console.error('Session restore data load failed',e)}
+  }
+})();
+
+// Backend bridge must own the save buttons.
+// The UI renderer functions above are local-only; these handlers persist to Apps Script.
+window.addEventListener('load',()=>{
+  const sb=document.getElementById('saveBatch');
+  const sr=document.getElementById('saveReceive');
+  if(sb && typeof window.saveBatch==='function') sb.onclick=window.saveBatch;
+  if(sr && typeof window.saveReceive==='function') sr.onclick=window.saveReceive;
+});
+
+// Personal APK: PWA install/service-worker helper removed for local WebView bundle.
+</script>
+<script>
+/* PERSONAL APK — fully offline/local mode. Web App / Apps Script remains untouched. */
+(function(){
+  const USERS_KEY='rm_personal_users_v1';
+  const defaultUsers=[
+    {email:'admin@local',name:'Personal User',role:'Admin',password:'1234',active:true}
+  ];
+  function users(){try{const saved=JSON.parse(localStorage.getItem(USERS_KEY)||'null');return (Array.isArray(saved)?saved:defaultUsers.slice()).filter(u=>u&&u.role==='Admin')}catch(e){return defaultUsers.slice()}}
+  function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u))}
+  if(!localStorage.getItem(USERS_KEY)) saveUsers(defaultUsers);
+  window.RM_AUTH_CONFIG={url:''};
+  window.authToken=localStorage.getItem('rm_auth_token')||'';
+  window.authUser=(()=>{try{return JSON.parse(localStorage.getItem('rm_auth_user')||'null')}catch(e){return null}})();
+
+  function finishLogin(u){
+    window.authUser={email:u.email,name:u.name,role:u.role};
+    window.authToken='demo';
+    localStorage.setItem('rm_auth_token','demo');
+    localStorage.setItem('rm_auth_user',JSON.stringify(window.authUser));
+    state.user=u.name||u.email; state.role=u.role||'Member'; save();
+    if(typeof unlockForAuth==='function') unlockForAuth();
+    if(typeof updateAuthLabel==='function') updateAuthLabel();
+    if(typeof renderDashboard==='function') renderDashboard();
+    if(typeof renderAdmin==='function') renderAdmin();
+  }
+  window.loginUser=async function(email,password){
+    const e=String(email||'').trim().toLowerCase();
+    const p=String(password||'');
+    const u=users().find(x=>x.active && String(x.email).toLowerCase()===e && x.password===p);
+    if(!u){ if(typeof authMsg!=='undefined') authMsg.textContent='Invalid email or password'; return; }
+    if(typeof authMsg!=='undefined') authMsg.textContent='';
+    finishLogin(u);
+  };
+  window.logoutUser=async function(){
+    localStorage.removeItem('rm_auth_token'); localStorage.removeItem('rm_auth_user');
+    window.authToken=''; window.authUser=null; state.role='Member'; state.user='Signed out'; save();
+    if(typeof lockForAuth==='function') lockForAuth();
+  };
+  window.restoreAuthSession=async function(){
+    const token=localStorage.getItem('rm_auth_token');
+    if(token!=='demo'){if(typeof lockForAuth==='function')lockForAuth();return false;}
+    const au=(()=>{try{return JSON.parse(localStorage.getItem('rm_auth_user')||'null')}catch(e){return null}})();
+    const u=au&&users().find(x=>x.active&&x.email===au.email);
+    if(!u){localStorage.removeItem('rm_auth_token');localStorage.removeItem('rm_auth_user');if(typeof lockForAuth==='function')lockForAuth();return false;}
+    finishLogin(u); return true;
+  };
+
+  window.saveReceive=function(){
+    if(!window.authToken){alert('Please login first.');return;}
+    const d=recvDate.value||today(),c=recvItem.value,q=num(recvQty.value);
+    if(!q){alert('Receive quantity দিন');return;}
+    state.receives.push({id:'REC-'+Date.now(),date:d,rmCode:c,qty:q,note:recvNote.value||'',user:state.user||state.role,savedAt:new Date().toISOString(),correctionCount:0});
+    save(); recvQty.value=''; recvNote.value='';
+    renderReceives();renderDashboard();renderReceiveMonthly();renderDaily();renderFinal();
+    alert('Receive saved ✔');
+  };
+  window.correctReceive=function(i){
+    const c=Number(state.corrections[i]||0);
+    if(state.role!=='Admin'&&c>=3){alert('Maximum 3 corrections reached');return;}
+    const x=state.receives[i]; if(!x)return;
+    const nv=prompt('Current quantity: '+x.qty+'\nNew quantity:',x.qty); if(nv===null)return;
+    const n=num(nv); if(n<0){alert('Receive quantity negative হতে পারবে না');return;}
+    if(n===num(x.qty)){alert('নতুন quantity আগের মতোই আছে');return;}
+    const reason=prompt('Correction reason লিখুন:','Wrong entry correction'); if(reason===null||!reason.trim())return;
+    const now=new Date().toISOString();
+    state.audits.push({entry:x.id||i,user:state.user||state.role,old:{...x},new:{...x,qty:n},reason:reason.trim(),time:now,count:c+1});
+    state.corrections[i]=c+1;x.qty=n;x.correctionCount=c+1;x.lastCorrectionAt=now;x.lastCorrectionBy=state.user||state.role;
+    save();renderReceives();renderDashboard();renderDaily();renderFinal();
+    alert(state.role==='Admin'?'Correction saved ✔ (Admin unlimited)':'Correction saved ✔ ('+(c+1)+'/3)');
+  };
+  window.saveBatch=function(){
+    if(!window.authToken){alert('Please login first.');return;}
+    const d=batchDate.value||today(),sh=String(document.getElementById('batchShift')?.value||'1');let changed=0;
+    document.querySelectorAll('.batchInput').forEach(i=>{
+      const q=num(i.value),c=i.dataset.code,idx=state.batches.findIndex(x=>x.date===d&&String(x.productCode)===String(c)&&String(x.shift||'1')===sh);
+      if(q>0){const o={id:idx>=0?state.batches[idx].id:'BAT-'+Date.now()+'-'+sh+'-'+c,date:d,productCode:c,shift:sh,qty:q,user:state.user||state.role,savedAt:new Date().toISOString(),correctionCount:idx>=0?(state.batches[idx].correctionCount||0):0};idx>=0?state.batches[idx]=o:state.batches.push(o);changed++}
+      else if(idx>=0){state.batches.splice(idx,1);changed++}
+    });
+    save();renderBatchEntry();renderDashboard();renderMixing();renderMixMonthly();renderDaily();renderFinal();renderLog();alert(changed?'Shift '+sh+' batch saved. তিন শিফটের দৈনিক মোট Mixing-2-এ যুক্ত হয়েছে ✔':'কোনো Batch Qty পরিবর্তন করা হয়নি।');
+  };
+  window.saveRmMaster=function(i){if(state.role!=='Admin')return;const rows=masterEditor.querySelectorAll('[data-mi="'+i+'"]');const x=state.rmMaster[i];rows.forEach(e=>x[e.dataset.f]=e.dataset.f==='opening'?num(e.value):e.value.trim());save();renderAllAfterMaster();alert('RM saved ✔')};
+  window.adminAddRm=function(){if(state.role!=='Admin')return;const code=Number(newRmCode.value),name=newRmName.value.trim(),uom=newRmUom.value.trim()||'kg';if(!code||!name||rm(code)){alert('Valid unique RM code/name দিন');return}state.rmMaster.push({code,name,uom,opening:0});state.recipeMaster[String(code)]=state.productMaster.map(()=>0);save();renderAllAfterMaster();alert('RM added ✔ Recipe quantity = 0')};
+  window.saveProductMaster=function(i){if(state.role!=='Admin')return;const e=masterEditor.querySelector('[data-pi="'+i+'"]');if(e)state.productMaster[i].name=e.value.trim()||state.productMaster[i].name;save();renderAllAfterMaster();alert('Product saved ✔')};
+  window.adminAddProduct=function(){if(state.role!=='Admin')return;const code=Number(newProdCode.value),name=newProdName.value.trim();if(!code||!name||prod(code)){alert('Valid unique product code/name দিন');return}state.productMaster.push({code,name});Object.keys(state.recipeMaster).forEach(k=>state.recipeMaster[k].push(0));save();renderAllAfterMaster();alert('Product added ✔')};
+  window.saveAllRecipes=function(){if(state.role!=='Admin')return;state.rmMaster.forEach((r,ri)=>{state.recipeMaster[String(r.code)]=state.productMaster.map((p,pi)=>num(document.getElementById('rec_'+ri+'_'+pi)?.value))});save();renderAllAfterMaster();alert('Mixing-2 recipe saved ✔')};
+  window.adminEditOpeningRM=function(i){if(state.role!=='Admin')return;const x=state.rmMaster[i];if(!x)return;const code=prompt('RM Code:',x.code);if(code===null)return;const name=prompt('RM Name:',x.name);if(name===null)return;const uom=prompt('UoM:',x.uom);if(uom===null)return;const q=prompt('Opening Balance:',num(x.opening));if(q===null)return;const ncode=String(code).trim(),nname=String(name).trim(),nuom=String(uom).trim()||x.uom,nqty=Number(q);if(!ncode||!nname||!Number.isFinite(nqty)||nqty<0)return alert('Valid Code, Name and Opening Balance দিন');if(state.rmMaster.some((r,j)=>j!==i&&String(r.code)===ncode))return alert('এই RM Code already exists');x.code=ncode;x.name=nname;x.uom=nuom;x.opening=nqty;save();renderAllAfterMaster();alert('RM Opening updated ✔');};
+  window.adminAddOpeningRM=function(){if(state.role!=='Admin')return;const code=String(document.getElementById('openingNewCode').value||'').trim(),name=document.getElementById('openingNewName').value.trim(),uom=document.getElementById('openingNewUom').value.trim()||'kg',qty=num(document.getElementById('openingNewQty').value);if(!code||!name||rm(code)||qty<0)return alert('Unique RM Code, Name এবং valid Opening Balance দিন');state.rmMaster.push({code,name,uom,opening:qty});state.recipeMaster[code]=state.productMaster.map(()=>0);save();renderAllAfterMaster();document.getElementById('openingNewCode').value='';document.getElementById('openingNewName').value='';document.getElementById('openingNewQty').value='';alert('New RM + Opening added ✔');};
+  window.adminEditReceive=function(i){if(state.role!=='Admin')return;const x=state.receives[i];if(!x)return;const d=prompt('Receive Date (YYYY-MM-DD):',x.date);if(d===null)return;const code=prompt('RM Code:',x.rmCode);if(code===null)return;const q=prompt('Receive Qty:',x.qty);if(q===null)return;const note=prompt('Entry Note:',x.note||'');if(note===null)return;const r=rm(code);const n=num(q);if(!r||n<0)return alert('Valid RM Code এবং quantity দিন');x.date=d.trim();x.rmCode=String(code).trim();x.qty=n;x.note=note;save();renderReceives();renderReceiveMonthly();renderDashboard();renderDaily();renderFinal();alert('RM Daily Entry edited ✔');};
+  window.saveCompany=function(){if(state.role!=='Admin')return alert('Company name change requires Admin');const name=companyInput.value.trim()||state.company;state.company=name;save();companyTop.textContent=name;alert('Company Name saved ✔')};
+
+  function renderLocalUsers(){if(typeof renderUsers==='function'){
+    const body=document.getElementById('usersBody'); if(!body||state.role!=='Admin')return;
+    body.innerHTML=users().map((u,i)=>'<tr><td>'+esc(u.email)+'</td><td>'+esc(u.name)+'</td><td>'+esc(u.role)+'</td><td>'+(u.active?'Active':'Inactive')+'</td><td><button class="secondary" onclick="toggleManagedUser('+i+')">'+(u.active?'Deactivate':'Activate')+'</button></td><td><button class="secondary" onclick="resetManagedPassword('+i+')">Reset</button></td></tr>').join('');
+  }}
+  window.refreshUsers=async function(){renderLocalUsers()};
+  window.createManagedUser=function(){if(state.role!=='Admin')return;const email=document.getElementById('newUserEmail').value.trim().toLowerCase(),name=document.getElementById('newUserName').value.trim(),role=document.getElementById('newUserRole').value,password=document.getElementById('newUserPassword').value;if(!email||!name||password.length<4)return alert('Email, name এবং 4+ character password দিন');const u=users();if(u.some(x=>x.email===email))return alert('এই email already exists');u.push({email,name,role,password,active:true});saveUsers(u);document.getElementById('newUserEmail').value='';document.getElementById('newUserName').value='';document.getElementById('newUserPassword').value='';renderLocalUsers();alert('User added ✔')};
+  window.toggleManagedUser=function(i){if(state.role!=='Admin')return;const u=users(),x=u[i];if(!x)return;if(x.active&&!confirm('Deactivate '+x.email+'?'))return;if(x.active&&x.role==='Admin'&&u.filter(z=>z.active&&z.role==='Admin').length<=1)return alert('Last active Admin cannot be deactivated');x.active=!x.active;saveUsers(u);renderLocalUsers()};
+  window.resetManagedPassword=function(i){if(state.role!=='Admin')return;const u=users(),x=u[i];if(!x)return;const p=prompt('New password for '+x.email+' (minimum 4 characters):');if(p===null)return;if(p.length<4)return alert('Password must be at least 4 characters');x.password=p;saveUsers(u);alert('Password reset ✔')};
+  window.addApproval=function(type,oldv,newv,meta){if(state.role==='Admin'){return}state.approvals.push({id:'REQ-'+Date.now(),type,old:oldv,new:newv,user:state.user||state.role,time:new Date().toISOString(),status:'Pending',meta:meta||{}});save();renderAdmin();alert('Request sent ✔')};
+  window.approve=function(i){if(state.role!=='Admin')return;const a=state.approvals[i];if(!a||a.status!=='Pending')return;a.status='Approved';a.approvedBy=state.user||'Admin';a.approvedAt=new Date().toISOString();save();renderAdmin();alert('Approved ✔')};
+  window.reject=function(i){if(state.role!=='Admin')return;const a=state.approvals[i];if(!a||a.status!=='Pending')return;const note=prompt('Rejection reason:','Rejected by Admin');if(note===null)return;a.status='Rejected';a.reason=note;save();renderAdmin();alert('Rejected')};
+
+  // Rebind login/logout and all save buttons after the original backend bridge.
+  const lf=document.getElementById('loginForm'); if(lf) lf.onsubmit=function(e){e.preventDefault();window.loginUser(document.getElementById('loginEmail').value.trim(),document.getElementById('loginPassword').value)};
+  const lo=document.getElementById('logoutBtn'); if(lo) lo.onclick=window.logoutUser;
+  window.addEventListener('load',function(){
+    const sb=document.getElementById('saveBatch');if(sb)sb.onclick=window.saveBatch;
+    const sr=document.getElementById('saveReceive');if(sr)sr.onclick=window.saveReceive;
+    if(localStorage.getItem('rm_auth_token')==='demo') window.restoreAuthSession(); else if(typeof lockForAuth==='function') lockForAuth();
+  });
+  // Make initial startup local; no network/API calls are needed.
+  if(localStorage.getItem('rm_auth_token')==='demo') setTimeout(()=>window.restoreAuthSession(),0);
+})();
+</script>
+<script>
+/* PERSONAL APK — ONLY NEW FEATURE: Admin-only editable core sheet/display names.
+   Stable page IDs and all data/calculation functions remain unchanged. */
+(function(){
+  const KEY='rm_sheet_labels_v1';
+  const defaultLabels={
+    dashboard:'Dashboard',
+    'rm-opening':'RM Opening Balance',
+    'rm-daily':'RM Daily Entry',
+    'rm-monthly':'RM Receive Monthly',
+    'input-batch':'Input Batch',
+    mixing:'Mixing-2',
+    'mix-monthly':'RM Mixing2 Monthly',
+    'daily-report':'Daily Date Report',
+    'final-monthly':'Final Monthly Usage',
+    'batch-log':'RM Mixing2 Batch Log',
+    company:'Company Profile',
+    admin:'Admin Panel'
+  };
+  function loadLabels(){try{return Object.assign({},defaultLabels,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){return Object.assign({},defaultLabels)}}
+  function saveLabels(x){localStorage.setItem(KEY,JSON.stringify(x))}
+  state.sheetLabels=loadLabels();
+  function label(id){return state.sheetLabels[id]||defaultLabels[id]||id}
+  function applyLabels(){
+    const map=navItems;
+    map.forEach(item=>{item[1]=label(item[0])});
+    const heads={dashboard:'dashboard', 'rm-opening':'rmOpeningBody','rm-daily':'rmDailyBody','rm-monthly':'recvMonthlyBody','input-batch':'batchDate','mixing':'mixTable','mix-monthly':'mixMonthlyTable','daily-report':'dailyTable','final-monthly':'finalTable','batch-log':'batchLogBody',company:'companyInput',admin:'admin'};
+    const h1={dashboard:'Dashboard','rm-opening':'RM Opening Balance','rm-daily':'RM Daily Entry','rm-monthly':'RM Receive Monthly','input-batch':'Input Batch',mixing:'Mixing-2','mix-monthly':'RM Mixing2 Monthly','daily-report':'Daily Date Report','final-monthly':'Final Monthly Usage','batch-log':'RM Mixing2 Batch Log',company:'Company Profile',admin:'Admin Panel'};
+    Object.keys(h1).forEach(id=>{const el=document.querySelector('#'+id+' h1');if(el)el.textContent=label(id)});
+    buildNav();
+  }
+  window.renderSheetNameManager=function(){
+    if(state.role!=='Admin')return;
+    let box=document.getElementById('sheetNameManager');
+    if(!box){
+      const admin=document.getElementById('admin');
+      if(!admin)return;
+      box=document.createElement('div');box.id='sheetNameManager';box.className='card';
+      const anchor=admin.querySelector('.protected-list')?.closest('.card');
+      if(anchor)anchor.parentNode.insertBefore(box,anchor); else admin.appendChild(box);
+    }
+    box.innerHTML='<h3>📝 Core Sheet Name Editor</h3><div class="small" style="margin-bottom:10px">কোম্পানি পরিবর্তন হলে প্রয়োজন অনুযায়ী sheet/page-এর প্রদর্শিত নাম এখানে বদলান। ভিতরের stable page ID, হিসাব ও data relationship অপরিবর্তিত থাকবে।</div>'+navItems.map(([id])=>'<div class="toolbar" style="margin:6px 0"><label style="min-width:145px"><b>'+esc(defaultLabels[id]||id)+'</b></label><input data-sheet-label="'+esc(id)+'" value="'+esc(label(id))+'" style="flex:1;min-width:180px"><button class="secondary" data-save-sheet="'+esc(id)+'">Save</button></div>').join('');
+    box.querySelectorAll('[data-save-sheet]').forEach(btn=>btn.onclick=function(){
+      const id=this.dataset.saveSheet,inp=box.querySelector('[data-sheet-label="'+CSS.escape(id)+'"]');
+      const v=(inp?.value||'').trim(); if(!v)return alert('Sheet name দিন');
+      const duplicate=Object.keys(state.sheetLabels).some(k=>k!==id && label(k).toLowerCase()===v.toLowerCase());
+      if(duplicate)return alert('এই নামটি অন্য একটি sheet/page-এ ব্যবহার হচ্ছে');
+      state.sheetLabels[id]=v;saveLabels(state.sheetLabels);save();applyLabels();renderSheetNameManager();alert('Sheet name saved ✔');
+    });
+  };
+  const oldBuildNav=window.buildNav;
+  window.buildNav=function(){
+    navItems.forEach(item=>{item[1]=label(item[0])});
+    oldBuildNav();
+  };
+  const oldRenderAdmin=window.renderAdmin;
+  window.renderAdmin=function(){oldRenderAdmin();renderSheetNameManager()};
+  // Apply saved names after the existing UI has initialized.
+  setTimeout(()=>{applyLabels();if(state.role==='Admin')renderSheetNameManager()},0);
+})();
+
+// Local-only Backup / Restore utilities. Only RM Stock app keys are included.
+(function(){
+  const LAST_KEY='rm_local_last_backup_at';
+  const USER_KEY='rm_personal_users_v1';
+  const lastEl=()=>document.getElementById('lastBackupText');
+  function appKeys(){const out=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith('rm_')||k===USER_KEY))out.push(k)}return out.sort();}
+  function updateLast(){const el=lastEl();if(!el)return;const raw=localStorage.getItem(LAST_KEY);if(!raw){el.textContent='Last Backup: এখনো Backup নেওয়া হয়নি';return}const d=new Date(raw);el.textContent='Last Backup: '+(isNaN(d)?raw:d.toLocaleString());}
+  function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
+  function backupNow(){try{const data={app:'RM Stock Management',format:'rm-stock-local-backup',version:1,createdAt:new Date().toISOString(),storage:{}};appKeys().forEach(k=>data.storage[k]=localStorage.getItem(k));const stamp=new Date().toISOString().replace(/[:.]/g,'-');downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),'RM_Stock_Backup_'+stamp+'.json');localStorage.setItem(LAST_KEY,data.createdAt);updateLast();alert('Backup ফাইল তৈরি হয়েছে। ফোনের Downloads ফোল্ডারে দেখুন।');}catch(e){alert('Backup করা যায়নি: '+(e.message||e));}}
+  function restoreFile(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);if(data.format!=='rm-stock-local-backup'||!data.storage||typeof data.storage!=='object')throw new Error('এটি RM Stock Backup ফাইল নয়।');if(!confirm('Backup-এর ডেটা দিয়ে এই ফোনের বর্তমান RM Stock ডেটা প্রতিস্থাপন হবে। আগে বর্তমান ডেটার Backup নিয়েছেন তো? Restore করবেন?'))return;appKeys().forEach(k=>localStorage.removeItem(k));Object.entries(data.storage).forEach(([k,v])=>{if(k.startsWith('rm_')||k===USER_KEY){if(typeof v==='string')localStorage.setItem(k,v)}});localStorage.setItem(LAST_KEY,data.createdAt||new Date().toISOString());alert('Backup Restore হয়েছে। অ্যাপ Reload হবে।');location.reload();}catch(e){alert('Restore করা যায়নি: '+(e.message||e));}finally{const inp=document.getElementById('backupFileInput');if(inp)inp.value='';}};reader.onerror=()=>alert('ফাইল পড়া যায়নি।');reader.readAsText(file);}
+  function csvCell(v){let s=String(v??'');return '"'+s.replace(/"/g,'""')+'"';}
+  function exportCsv(){try{const rows=[['Type','Date','Code','Name','Qty','User','Details']];let batches=[];let receives=[];try{batches=JSON.parse(localStorage.getItem('rm_batches')||'[]')}catch(e){}try{receives=JSON.parse(localStorage.getItem('rm_receives')||'[]')}catch(e){}batches.forEach(x=>rows.push(['Batch',x.date||x.Date||'',x.code||x.productCode||x.ProductCode||'',x.name||x.productName||'',x.qty??x.quantity??x.Qty??'',x.user||x.createdBy||'',JSON.stringify(x)]));receives.forEach(x=>rows.push(['Receive',x.date||x.Date||'',x.code||x.rmCode||x.RMCode||'',x.name||x.rmName||'',x.qty??x.quantity??x.Qty??'',x.user||x.createdBy||'',JSON.stringify(x)]));const csv='\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n');downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),'RM_Stock_Transactions_'+new Date().toISOString().slice(0,10)+'.csv');}catch(e){alert('CSV Export করা যায়নি: '+(e.message||e));}}
+  document.addEventListener('DOMContentLoaded',()=>{document.getElementById('backupNowBtn')?.addEventListener('click',backupNow);document.getElementById('restoreBackupBtn')?.addEventListener('click',()=>document.getElementById('backupFileInput')?.click());document.getElementById('backupFileInput')?.addEventListener('change',e=>restoreFile(e.target.files?.[0]));document.getElementById('exportCsvBtn')?.addEventListener('click',exportCsv);updateLast();});
+})();
+
+</script>
+
+<script>
+// PWA offline cache. Service workers require HTTPS or localhost; opening index.html directly
+// still works locally, but browser-managed PWA caching is unavailable in file:// mode.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function (err) { console.warn('Service worker registration failed:', err); }); });
+}
+</script>
+
+<!-- Offline Voucher AI Agent — NEW FEATURE ONLY. Existing logic/functions unchanged. Fully offline (local Tesseract). -->
+<script src="./lib/tesseract/tesseract.min.js"></script>
+<script>
+(function(){
+  // Completely additive. Does not modify any existing saveReceive / state / render functions.
+  // All OCR assets are local under ./lib/tesseract/ for full offline use.
+  let stream = null;
+  let tesseractWorker = null;
+  const TESS_BASE = './lib/tesseract/';
+
+  function $(id){ return document.getElementById(id); }
+
+  function setStatus(msg, show){
+    const el = $('ocrStatus');
+    if(!el) return;
+    el.style.display = show === false ? 'none' : 'block';
+    el.textContent = msg || '';
+  }
+
+  function fillItemSelect(sel){
+    if(!sel || !window.state || !state.rmMaster) return;
+    sel.innerHTML = state.rmMaster.map(x => '<option value="'+x.code+'">'+x.code+' — '+esc(x.name)+'</option>').join('');
+  }
+
+  function parseVoucherText(text){
+    const result = { date: today(), rmCode: null, qty: null, note: '', raw: text };
+    if(!text) return result;
+
+    // Date patterns: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+    const dateRe = /(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})|(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})/g;
+    let m;
+    while((m = dateRe.exec(text)) !== null){
+      let d = m[0].replace(/[./]/g, '-');
+      const parts = d.split('-');
+      if(parts[0].length === 4){
+        result.date = parts[0] + '-' + parts[1].padStart(2,'0') + '-' + parts[2].padStart(2,'0');
+        break;
+      } else if(parts[2].length === 4){
+        result.date = parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0');
+        break;
+      } else if(parts[2].length === 2){
+        result.date = '20' + parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0');
+        break;
+      }
+    }
+
+    // Quantity: English + Bangla keywords
+    const qtyRe = /(?:qty|quantity|receive|received|wt|weight|kg|কেজি|কি\.?জি\.?|পরিমাণ|ওজন|গ্রহণ|প্রাপ্ত)[^\d]{0,14}(\d+(?:[.,]\d+)?)/i;
+    const qtyM = text.match(qtyRe);
+    if(qtyM) result.qty = parseFloat(qtyM[1].replace(',', '.'));
+    else {
+      // fallback: largest reasonable number that looks like weight
+      const nums = (text.match(/\d+(?:[.,]\d+)?/g) || []).map(n => parseFloat(n.replace(',', '.'))).filter(n => n > 0 && n < 50000);
+      if(nums.length) result.qty = Math.max(...nums);
+    }
+
+    // Match RM by code or name (case-insensitive partial)
+    if(window.state && state.rmMaster){
+      const lower = text.toLowerCase();
+      for(const r of state.rmMaster){
+        if(lower.includes(String(r.code))) { result.rmCode = r.code; break; }
+      }
+      if(!result.rmCode){
+        for(const r of state.rmMaster){
+          const nameL = (r.name || '').toLowerCase();
+          if(nameL.length > 3 && lower.includes(nameL)) { result.rmCode = r.code; break; }
+          // partial word match
+          const words = nameL.split(/[\s\-]+/).filter(w => w.length > 3);
+          if(words.some(w => lower.includes(w))) { result.rmCode = r.code; break; }
+        }
+      }
+    }
+
+    // Note / Challan / Voucher no
+    const noteRe = /(?:challan|voucher|invoice|bill|ref|reference|চালান|ভাউচার|নং|no\.?)[^\w]{0,8}([A-Z0-9\-\/]+)/i;
+    const noteM = text.match(noteRe);
+    if(noteM) result.note = noteM[0].trim();
+    else result.note = 'Scanned voucher ' + new Date().toLocaleString();
+
+    return result;
+  }
+
+  async function ensureWorker(){
+    if(tesseractWorker) return tesseractWorker;
+    if(typeof Tesseract === 'undefined'){
+      throw new Error('Tesseract.js লোড হয়নি। lib/tesseract ফোল্ডার ঠিক আছে কিনা চেক করুন।');
+    }
+    setStatus('OCR মডেল লোড হচ্ছে (English + বাংলা, লোকাল অফলাইন)...');
+    tesseractWorker = await Tesseract.createWorker(['eng','ben'], 1, {
+      workerPath: TESS_BASE + 'worker.min.js',
+      corePath: TESS_BASE + 'tesseract-core-simd-lstm.wasm.js',
+      langPath: TESS_BASE,
+      cachePath: TESS_BASE,
+      workerBlobURL: false,
+      gzip: false
+    });
+    return tesseractWorker;
+  }
+
+  async function startCamera(){
+    try{
+      if(stream) stopCamera();
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      const v = $('voucherVideo');
+      v.srcObject = stream;
+      v.style.display = 'block';
+      $('captureVoucherBtn').style.display = '';
+      $('stopCameraBtn').style.display = '';
+      $('startCameraBtn').style.display = 'none';
+      setStatus('ক্যামেরা চালু। ভাউচার ফ্রেমে রেখে Capture চাপুন।', true);
+    }catch(e){
+      alert('ক্যামেরা খোলা যায়নি: ' + (e.message || e) + '\n\nHTTPS বা localhost-এ চালান এবং ক্যামেরা পারমিশন দিন।');
+    }
+  }
+
+  function stopCamera(){
+    if(stream){
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    const v = $('voucherVideo');
+    if(v){ v.srcObject = null; v.style.display = 'none'; }
+    $('captureVoucherBtn').style.display = 'none';
+    $('stopCameraBtn').style.display = 'none';
+    $('startCameraBtn').style.display = '';
+  }
+
+  async function captureAndDetect(){
+    const v = $('voucherVideo');
+    const c = $('voucherCanvas');
+    if(!v || !v.videoWidth){ alert('ক্যামেরা রেডি নয়'); return; }
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0);
+    stopCamera();
+
+    setStatus('ডিটেকশন চলছে... অনুগ্রহ করে অপেক্ষা করুন।', true);
+    $('voucherResultArea').style.display = 'none';
+
+    try{
+      const worker = await ensureWorker();
+      const { data: { text } } = await worker.recognize(c);
+      const parsed = parseVoucherText(text);
+
+      fillItemSelect($('vDetItem'));
+      $('vDetDate').value = parsed.date || today();
+      if(parsed.rmCode) $('vDetItem').value = parsed.rmCode;
+      $('vDetQty').value = parsed.qty != null ? parsed.qty : '';
+      $('vDetNote').value = parsed.note || '';
+      $('voucherRawOcr').textContent = 'Raw OCR:\n' + (text || '(empty)');
+      $('voucherResultArea').style.display = 'block';
+      setStatus('ডিটেক্ট সম্পন্ন। নিচে ডেটা চেক/এডিট করে Admin Approve করুন।', true);
+
+      // Auto-focus result for review
+      $('vDetQty').focus();
+    }catch(e){
+      setStatus('OCR ব্যর্থ: ' + (e.message || e), true);
+      alert('ডিটেক্ট করা যায়নি। ম্যানুয়ালি এন্ট্রি করুন অথবা আবার স্ক্যান করুন।\n' + (e.message || e));
+    }
+  }
+
+  function approveAndAdd(){
+    if(!window.authToken){ alert('Please login first.'); return; }
+    if((state.role || '') !== 'Admin'){
+      alert('শুধুমাত্র Admin অনুমতি দিয়ে Daily Entry-তে যোগ করতে পারবেন।\nবর্তমান রোল: ' + (state.role || 'Member'));
+      return;
+    }
+    const d = $('vDetDate').value || today();
+    const c = $('vDetItem').value;
+    const q = num($('vDetQty').value);
+    const note = ($('vDetNote').value || '').trim() || 'Scanned voucher';
+    if(!q || q <= 0){ alert('সঠিক Quantity দিন'); return; }
+    if(!c){ alert('RM Item সিলেক্ট করুন'); return; }
+
+    // Reuse exact same data shape as existing saveReceive (no change to core logic)
+    state.receives.push({
+      id: 'REC-' + Date.now(),
+      date: d,
+      rmCode: c,
+      qty: q,
+      note: note + ' [AI-Scanned]',
+      user: state.user || state.role,
+      savedAt: new Date().toISOString(),
+      correctionCount: 0,
+      source: 'voucher-ai-agent'
+    });
+    save();
+    if(typeof renderReceives === 'function') renderReceives();
+    if(typeof renderDashboard === 'function') renderDashboard();
+    if(typeof renderReceiveMonthly === 'function') renderReceiveMonthly();
+    if(typeof renderDaily === 'function') renderDaily();
+    if(typeof renderFinal === 'function') renderFinal();
+
+    alert('Admin অনুমোদিত ✔ Daily Entry-তে যোগ হয়েছে।');
+    $('voucherResultArea').style.display = 'none';
+    setStatus('', false);
+    // Also fill the main form for convenience
+    if($('recvDate')) $('recvDate').value = d;
+    if($('recvItem')) $('recvItem').value = c;
+    if($('recvQty')) $('recvQty').value = '';
+    if($('recvNote')) $('recvNote').value = '';
+  }
+
+  function toggleAgentCard(){
+    const card = $('voucherAgentCard');
+    if(!card) return;
+    const show = card.style.display === 'none';
+    card.style.display = show ? 'block' : 'none';
+    if(show){
+      fillItemSelect($('vDetItem'));
+      $('vDetDate').value = today();
+      setStatus('ক্যামেরা খুলুন এবং ভাউচার স্ক্যান করুন।', true);
+    } else {
+      stopCamera();
+    }
+  }
+
+  function bind(){
+    const btn = $('scanVoucherBtn');
+    if(btn) btn.addEventListener('click', toggleAgentCard);
+    $('startCameraBtn')?.addEventListener('click', startCamera);
+    $('captureVoucherBtn')?.addEventListener('click', captureAndDetect);
+    $('stopCameraBtn')?.addEventListener('click', stopCamera);
+    $('approveVoucherBtn')?.addEventListener('click', approveAndAdd);
+    $('rescanVoucherBtn')?.addEventListener('click', () => {
+      $('voucherResultArea').style.display = 'none';
+      setStatus('আবার ক্যামেরা খুলুন।', true);
+      startCamera();
+    });
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+</body></html>
